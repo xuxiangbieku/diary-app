@@ -1,0 +1,14 @@
+﻿{
+  "name": "记·日记",
+  "short_name": "日记",
+  "description": "一个安静美好的私人日记本",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#faf6f0",
+  "theme_color": "#d68d45",
+  "orientation": "any",
+  "icons": [
+    { "src": "icons/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml" },
+    { "src": "icons/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml" }
+  ]
+}

@@ -1,0 +1,114 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#d68d45">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<title>记·日记</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app" id="app">
+<div class="left-panel">
+<div class="header desktop-header">
+<h1>&#x2302; &#x65E5;&#x8BB0;</h1>
+<div class="header-actions">
+<button class="icon-btn" id="statsBtn" title="&#x7EDF;&#x8BA1;">&#x1F4CA;</button>
+<button class="icon-btn" id="exportBtn" title="&#x5BFC;&#x51FA;">&#x2B06;</button>
+</div>
+</div>
+<div class="month-nav">
+<div class="month-title" id="monthTitle"></div>
+<div class="month-arrows">
+<button id="prevMonth">&#x2039;</button>
+<button id="nextMonth">&#x203A;</button>
+</div>
+</div>
+<div class="weekdays"><span>&#x4E00;</span><span>&#x4E8C;</span><span>&#x4E09;</span><span>&#x56DB;</span><span>&#x4E94;</span><span>&#x516D;</span><span>&#x65E5;</span></div>
+<div class="calendar-wrap"><div class="calendar-grid" id="calendarGrid"></div></div>
+<div class="today-bar">
+<span class="tl">&#x4ECA;&#x65E5;</span>
+<span class="stat" id="statText">&#x70B9;&#x51FB;&#x65E5;&#x671F;&#x67E5;&#x770B;</span>
+</div>
+</div>
+<div class="right-panel" id="rightPanel">
+<div class="entry-header">
+<div>
+<div class="date-main" id="entryDate"></div>
+<div class="date-sub" id="entrySub"></div>
+</div>
+<div class="entry-actions">
+<button class="btn-back" id="backBtn">&#x2190; &#x8FD4;&#x56DE;</button>
+<button class="btn-edit" id="editBtn">&#x270E; &#x7F16;&#x8F91;</button></div>
+</div>
+<div class="entry-body" id="entryBody">
+<div class="empty-state" id="emptyState">
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+<p id="emptyHint">&#x70B9;&#x51FB;&#x65E5;&#x5386;&#x4E0A;&#x7684;&#x65E5;&#x671F;<br>&#x67E5;&#x770B;&#x6216;&#x8BB0;&#x5F55;&#x8FD9;&#x4E00;&#x5929;</p>
+</div>
+<div id="entryContent" style="display:none;">
+<div class="mood-section"><button class="mood-tag" id="moodDisplay"></button></div>
+<div class="location-section"><button class="location-chip" id="locationDisplay"></button></div>
+<div class="photo-section"><div class="photo-strip" id="photoDisplay"></div></div>
+<div class="diary-section"><div class="diary-display" id="diaryDisplay"></div></div>
+<div class="shopping-section" id="shoppingDisplay"></div>
+</div>
+</div>
+</div>
+<button class="fab" id="fabBtn">+</button>
+</div>
+<div class="modal-overlay" id="editModal" style="display:none;">
+<div class="modal-content">
+<div class="modal-header">
+<h2 id="modalTitle">&#x270E; &#x7F16;&#x8F91;&#x65E5;&#x8BB0;</h2>
+<button class="modal-save" id="saveBtn">&#x2713; &#x4FDD;&#x5B58;</button>
+</div>
+<div class="modal-body">
+<div class="mood-section">
+<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F31F; &#x5FC3;&#x60C5;</div>
+<div class="mood-picker" id="moodPicker">
+<button data-mood="&#x1F60A;">&#x1F60A; &#x6109;&#x60A6;</button>
+<button data-mood="&#x1F60C;">&#x1F60C; &#x5E73;&#x9759;</button>
+<button data-mood="&#x1F642;">&#x1F642; &#x8FD8;&#x884C;</button>
+<button data-mood="&#x1F614;">&#x1F614; &#x4F4E;&#x843D;</button>
+<button data-mood="&#x1F620;">&#x1F620; &#x70E6;&#x8E81;</button>
+<button data-mood="&#x1F4AA;">&#x1F4AA; &#x5143;&#x6C14;</button>
+<button data-mood="&#x1F929;">&#x1F929; &#x611F;&#x52A8;</button>
+</div>
+</div>
+<div class="location-section">
+<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F4CD; &#x4F4D;&#x7F6E;</div>
+<div class="location-input">
+<input type="text" id="locationInput" placeholder="&#x8F93;&#x5165;&#x5730;&#x70B9;&#x6216;&#x81EA;&#x52A8;&#x5B9A;&#x4F4D;...">
+<button class="loc-btn" id="geoBtn">&#x1F4CD;</button>
+</div>
+</div>
+<div class="photo-section">
+<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F4F7; &#x7167;&#x7247;</div>
+<div class="photo-strip" id="photoGrid" style="padding:0;"></div>
+<input type="file" id="photoInput" accept="image/*" multiple style="display:none;">
+</div>
+<div class="diary-section">
+<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x270D; &#x65E5;&#x8BB0;</div>
+<textarea class="diary-textarea" id="diaryInput" placeholder="&#x4ECA;&#x5929;&#x53D1;&#x751F;&#x4E86;&#x4EC0;&#x4E48;&#xFF1F;&#x60F3;&#x5199;&#x4EC0;&#x4E48;&#x90FD;&#x53EF;&#x4EE5;..."></textarea>
+</div>
+<div class="shopping-section">
+<div class="shop-header">
+<span class="shop-title">&#x1F6D2; &#x8D2D;&#x7269;&#x6E05;&#x5355;</span>
+<button class="shop-add" id="shopAddBtn">+ &#x6DFB;&#x52A0;</button>
+</div>
+<div class="shop-list" id="shopList"></div>
+<div class="shop-input-row" id="shopInputRow" style="display:none;">
+<input type="text" id="shopInput" placeholder="&#x8F93;&#x5165;&#x5546;&#x54C1;...">
+<button id="shopConfirm">&#x6DFB;&#x52A0;</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
