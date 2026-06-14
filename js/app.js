@@ -253,7 +253,7 @@ function init() {
     const tc = document.querySelector('.day-cell[data-date="'+today+'"]');
     if (tc) tc.classList.add("selected");
     document.getElementById("statText").textContent = today;
-    loadEntry(today);
+    loadEntry(today); openEdit(today);
     if (window.innerWidth < 768) document.getElementById("rightPanel").classList.add("open");
   };
 
@@ -329,3 +329,4 @@ function dbReady() {
 
 window.addEventListener("load", init);
 })();
+
