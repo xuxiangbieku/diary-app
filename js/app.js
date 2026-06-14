@@ -1,14 +1,11 @@
 ﻿(function(){
 const DAYS = ["\u65E5","\u4E00","\u4E8C","\u4E09","\u56DB","\u4E94","\u516D"];
-const MONTHS = ["1\u6708","2\u6708","3\u6708","4\u6708","5\u6708","6\u6708","7\u6708","8\u6708","9\u6708","10\u6708","11\u6708","12\u6708"];
-const MOODS = {"\u{1F60A}":"\u{1F60A} \u6109\u60A6","\u{1F60C}":"\u{1F60C} \u5E73\u9759","\u{1F642}":"\u{1F642} \u8FD8\u884C","\u{1F614}":"\u{1F614} \u4F4E\u843D","\u{1F620}":"\u{1F620} \u70E6\u8E81","\u{1F4AA}":"\u{1F4AA} \u5143\u6C14","\u{1F929}":"\u{1F929} \u611F\u52A8"};
 const WEEKDAYS = ["\u4E00","\u4E8C","\u4E09","\u56DB","\u4E94","\u516D","\u65E5"];
 
 let curYear, curMonth;
 let selectedDate = null;
 let currentEntry = null;
 let editingDate = null;
-
 let state = { mood: "", location: "", text: "", photos: [], shopping: [] };
 
 function fmt(d) {
@@ -30,7 +27,6 @@ function renderCalendar(year, month) {
   const startDow = first.getDay() || 7;
   const daysInMonth = last.getDate();
   const prevLast = new Date(year, month, 0).getDate();
-
   for (let i = startDow - 1; i > 0; i--) {
     const d = document.createElement("div");
     d.className = "day-cell other-month";
@@ -101,7 +97,7 @@ function showDateInfo(dateStr) {
   const wd = d.getDay();
   const dayOfYear = Math.floor((d - new Date(d.getFullYear(),0,0)) / 86400000);
   document.getElementById("entryDate").textContent = (d.getMonth()+1) + "\u6708 " + d.getDate() + "\u65E5 \u00B7 \u661F\u671F" + DAYS[wd];
-  document.getElementById("entrySub").textContent = "\u7B2C" + (d.getDate()>7?"":"0") + Math.ceil((dayOfYear+1)/7) + "\u5468 \u00B7 \u4E00\u5E74\u4E2D\u7B2C" + dayOfYear + "\u5929";
+  document.getElementById("entrySub").textContent = "\u7B2C" + Math.ceil((dayOfYear+1)/7) + "\u5468 \u00B7 \u4E00\u5E74\u4E2D\u7B2C" + dayOfYear + "\u5929";
 }
 
 async function loadEntry(dateStr) {
@@ -117,9 +113,10 @@ async function loadEntry(dateStr) {
   es.style.display = "none";
   ec.style.display = "block";
   const mood = document.getElementById("moodDisplay");
-  mood.textContent = currentEntry.mood ? (MOODS[currentEntry.mood] || currentEntry.mood) : "\u8BB0\u5F55\u5FC3\u60C5";
+  const moodVal = currentEntry.mood;
+  mood.textContent = moodVal ? moodVal + " " + ({"\u{1F60A}":"\u6109\u60A6","\u{1F60C}":"\u5E73\u9759","\u{1F642}":"\u8FD8\u884C","\u{1F614}":"\u4F4E\u843D","\u{1F620}":"\u70E6\u8E81","\u{1F4AA}":"\u5143\u6C14","\u{1F929}":"\u611F\u52A8"}[moodVal] || "") : "\u8BB0\u5F55\u5FC3\u60C5";
   const loc = document.getElementById("locationDisplay");
-  loc.innerHTML = currentEntry.location ? "\u{1F4CD} " + currentEntry.location : "\u8BB0\u5F55\u4F4D\u7F6E";
+  loc.textContent = currentEntry.location ? "\u{1F4CD} " + currentEntry.location : "\u8BB0\u5F55\u4F4D\u7F6E";
   const di = document.getElementById("diaryDisplay");
   di.textContent = currentEntry.text || "";
   renderPhotos(currentEntry.photos || [], "photoDisplay", false);
@@ -129,6 +126,7 @@ async function loadEntry(dateStr) {
 
 function renderPhotos(photos, containerId, deletable) {
   const c = document.getElementById(containerId);
+  if (!c) return;
   c.innerHTML = "";
   photos.forEach((p, i) => {
     const div = document.createElement("div");
@@ -140,15 +138,24 @@ function renderPhotos(photos, containerId, deletable) {
       const del = document.createElement("button");
       del.className = "photo-del";
       del.textContent = "\u00D7";
-      del.onclick = () => { state.photos.splice(i,1); renderPhotos(state.photos, "photoGrid", true); };
+      del.onclick = (ev) => { ev.stopPropagation(); state.photos.splice(i,1); renderPhotos(state.photos, "photoGrid", true); };
       div.appendChild(del);
     }
     c.appendChild(div);
   });
+  // Add "+" button always at the end, but only in editor mode
+  if (deletable) {
+    const addBtn = document.createElement("div");
+    addBtn.className = "photo-add-btn";
+    addBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>\u6DFB\u52A0\u7167\u7247</span>';
+    addBtn.onclick = () => document.getElementById("photoInput").click();
+    c.appendChild(addBtn);
+  }
 }
 
 function renderShopping(items, containerId, deletable) {
   const c = document.getElementById(containerId);
+  if (!c) return;
   c.innerHTML = "";
   if (!items || !items.length) {
     if (containerId === "shoppingDisplay") {
@@ -231,71 +238,50 @@ function init() {
   const now = new Date();
   renderCalendar(now.getFullYear(), now.getMonth());
   selectedDate = fmt(now);
-  document.querySelector('.day-cell[data-date="'+selectedDate+'"]')?.classList.add("selected");
+  const selCell = document.querySelector('.day-cell[data-date="'+selectedDate+'"]');
+  if (selCell) selCell.classList.add("selected");
   loadEntry(selectedDate);
 
-  document.getElementById("prevMonth").onclick = () => {
-    let m = curMonth - 1, y = curYear;
-    if (m < 0) { m = 11; y--; }
-    renderCalendar(y, m);
-  };
-  document.getElementById("nextMonth").onclick = () => {
-    let m = curMonth + 1, y = curYear;
-    if (m > 11) { m = 0; y++; }
-    renderCalendar(y, m);
-  };
-  document.getElementById("backBtn").onclick = () => {
-    document.getElementById("rightPanel").classList.remove("open");
-  };
+  document.getElementById("prevMonth").onclick = () => { let m = curMonth - 1, y = curYear; if (m < 0) { m = 11; y--; } renderCalendar(y, m); };
+  document.getElementById("nextMonth").onclick = () => { let m = curMonth + 1, y = curYear; if (m > 11) { m = 0; y++; } renderCalendar(y, m); };
+  document.getElementById("backBtn").onclick = () => { document.getElementById("rightPanel").classList.remove("open"); };
+
   document.getElementById("fabBtn").onclick = () => {
     const today = fmt(new Date());
     selectedDate = today;
     document.querySelectorAll(".day-cell.selected").forEach(e => e.classList.remove("selected"));
-    document.querySelector('.day-cell[data-date="'+today+'"]')?.classList.add("selected");
+    const tc = document.querySelector('.day-cell[data-date="'+today+'"]');
+    if (tc) tc.classList.add("selected");
     document.getElementById("statText").textContent = today;
     loadEntry(today);
-    if (window.innerWidth < 768) {
-      document.getElementById("rightPanel").classList.add("open");
-    }
-    openEdit(today);
-  };
-  document.getElementById("editBtn").onclick = () => {
-    if (selectedDate) openEdit(selectedDate);
-  };
-  document.getElementById("saveBtn").onclick = saveEntry;
-  document.querySelector(".modal-overlay").onclick = (e) => {
-    if (e.target === e.currentTarget) closeEdit();
+    if (window.innerWidth < 768) document.getElementById("rightPanel").classList.add("open");
   };
 
+  document.getElementById("editBtn").onclick = () => { if (selectedDate) openEdit(selectedDate); };
+  document.getElementById("saveBtn").onclick = saveEntry;
+  document.querySelector(".modal-overlay").onclick = (e) => { if (e.target === e.currentTarget) closeEdit(); };
+
   document.querySelectorAll("#moodPicker button").forEach(b => {
-    b.onclick = () => {
-      document.querySelectorAll("#moodPicker button").forEach(bb => bb.classList.remove("active"));
-      b.classList.add("active");
-    };
+    b.onclick = () => { document.querySelectorAll("#moodPicker button").forEach(bb => bb.classList.remove("active")); b.classList.add("active"); };
   });
 
   document.getElementById("geoBtn").onclick = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(pos => {
-      const lat = pos.coords.latitude.toFixed(4);
-      const lng = pos.coords.longitude.toFixed(4);
-      document.getElementById("locationInput").value = lat + ", " + lng;
+      document.getElementById("locationInput").value = pos.coords.latitude.toFixed(4) + ", " + pos.coords.longitude.toFixed(4);
     }, () => {}, { enableHighAccuracy: true });
   };
 
-  document.getElementById("photoGrid").onclick = () => {
-    document.getElementById("photoInput").click();
-  };
+  // Photo upload
   document.getElementById("photoInput").onchange = (e) => {
     const files = Array.from(e.target.files);
-    files.forEach(f => {
+    const doRead = (i) => {
+      if (i >= files.length) return;
       const reader = new FileReader();
-      reader.onload = (ev) => {
-        state.photos.push(ev.target.result);
-        renderPhotos(state.photos, "photoGrid", true);
-      };
-      reader.readAsDataURL(f);
-    });
+      reader.onload = (ev) => { state.photos.push(ev.target.result); renderPhotos(state.photos, "photoGrid", true); doRead(i+1); };
+      reader.readAsDataURL(files[i]);
+    };
+    doRead(0);
     e.target.value = "";
   };
 
@@ -324,6 +310,14 @@ function init() {
     a.href = URL.createObjectURL(blob);
     a.download = "diary_backup_" + fmt(new Date()) + ".json";
     a.click();
+  };
+
+  document.getElementById("statsBtn").onclick = async () => {
+    const entries = await DB.getAllEntries();
+    const total = entries.length;
+    const photoCount = entries.filter(e => e.photos && e.photos.length).length;
+    const shopCount = entries.filter(e => e.shopping && e.shopping.length).length;
+    alert("\u{1F4CA} \u7EDF\u8BA1\u62A5\u544A\n\n\u5171 " + total + " \u5929\u8BB0\u5F55\n\u542B\u7167\u7247: " + photoCount + " \u5929\n\u542B\u8D2D\u7269\u6E05\u5355: " + shopCount + " \u5929");
   };
 
   dbReady();
