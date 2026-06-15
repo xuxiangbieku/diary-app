@@ -1,14 +1,14 @@
-// 认证模块 - 使用 Supabase Auth
+﻿// 认证模块 - 使用 Supabase Auth
 (function(){
 // 初始化 Supabase 客户端
 const { createClient } = supabase;
 const supabaseClient = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
 
-// 暴露到全局
 window.__supabase = supabaseClient;
 
 let currentUser = null;
 let authListeners = [];
+let isRegister = false;
 
 // DOM 元素引用
 let authScreen, appMain, authEmail, authPassword, authBtn, authToggle, authError, authTitle;
@@ -27,26 +27,23 @@ function getEls() {
 function showError(msg) {
   if (authError) { authError.textContent = msg; authError.style.display = 'block'; }
 }
-
 function clearError() {
   if (authError) { authError.style.display = 'none'; authError.textContent = ''; }
 }
 
-let isRegister = false;
-
-function setupAuthUI() {
+async function setupAuthUI() {
   getEls();
   if (!authScreen || !appMain) return;
 
-  // 检查是否有登录状态
-  const session = supabaseClient.auth.session();
+  // Supabase v2: 使用 getSession() 检查登录状态
+  const { data: { session } } = await supabaseClient.auth.getSession();
   if (session) {
     currentUser = session.user;
     showApp();
     return;
   }
 
-  // 监听 auth 状态
+  // 监听 auth 状态变化
   supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) {
       currentUser = session.user;
@@ -72,17 +69,31 @@ function setupAuthUI() {
       authBtn.textContent = isRegister ? '注册中...' : '登录中...';
       try {
         if (isRegister) {
-          const { error } = await supabaseClient.auth.signUp({ email, password });
+          const { data, error } = await supabaseClient.auth.signUp({ email, password });
           if (error) throw error;
-          showError('注册成功！请检查邮箱验证，然后登录。');
-          authBtn.textContent = '已完成，去登录 →';
-          setTimeout(() => toggleMode(), 2000);
+          // 检查是否需要确认邮箱（如果DISABLE了邮箱确认就不用）
+          if (data?.user?.identities?.length === 0) {
+            showError('该邮箱已注册，请直接登录');
+          } else {
+            showError('注册成功！' + (data?.user?.confirmed_at ? '已自动登录' : '请检查邮箱验证'));
+            if (!data?.user?.confirmed_at) {
+              setTimeout(() => toggleMode(), 2000);
+            }
+          }
         } else {
-          const { error } = await supabaseClient.auth.signIn({ email, password });
-          if (error) throw error;
+          // Supabase v2: 使用 signInWithPassword 替代 signIn
+          const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) {
+            if (error.message.includes('Invalid login credentials')) {
+              showError('邮箱或密码错误');
+            } else {
+              throw error;
+            }
+          }
           // showApp() 会在 onAuthStateChange 中自动触发
         }
       } catch (err) {
+        console.error('Auth error:', err);
         showError(err.message || '操作失败，请重试');
       }
       authBtn.disabled = false;
@@ -93,8 +104,6 @@ function setupAuthUI() {
   if (authToggle) {
     authToggle.onclick = toggleMode;
   }
-
-  // 回车键提交
   if (authPassword) {
     authPassword.onkeydown = (e) => { if (e.key === 'Enter') authBtn?.click(); };
   }
@@ -121,24 +130,20 @@ function showAuth() {
 function showApp() {
   if (authScreen) authScreen.style.display = 'none';
   if (appMain) appMain.style.display = 'flex';
-  // 通知 app 数据已加载
   if (window.__onAuthReady) window.__onAuthReady(currentUser);
 }
 
-// 登出
 window.__logout = async function() {
+  showAuth();
   await supabaseClient.auth.signOut();
 };
 
-// 监听器
-function onAuthChange(fn) { authListeners.push(fn); }
 function notifyListeners(user) { authListeners.forEach(fn => fn(user)); }
 
-// 导出
 window.__auth = {
   init: setupAuthUI,
   getUser: () => currentUser,
-  onAuthChange,
+  onAuthChange: (fn) => authListeners.push(fn),
   supabase: supabaseClient
 };
 
