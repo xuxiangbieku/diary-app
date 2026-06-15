@@ -1,5 +1,5 @@
 ﻿// -*- coding: utf-8 -*-
-// 数据库模块 - 本地 IndexedDB + 远程 Supabase 同步
+// 数据库模块 - 本地 IndexedDB + Supabase REST API
 const DB = (() => {
   const DB_NAME = "DiaryDB", DB_VER = 1, STORE = "entries";
   let db = null;
@@ -40,43 +40,70 @@ const DB = (() => {
     });
   }
 
-  function getUserId() {
-    if (window.__auth) {
-      const user = window.__auth.getUser();
-      return user ? user.id : null;
-    }
+  // ---- 获取当前 access_token ----
+  function getToken() {
+    try {
+      const s = localStorage.getItem("sb-session");
+      if (s) { const parsed = JSON.parse(s); return parsed.access_token || null; }
+    } catch(e) {}
     return null;
+  }
+
+  function getUserId() {
+    try {
+      const s = localStorage.getItem("sb-session");
+      if (s) { const parsed = JSON.parse(s); return parsed.user?.id || null; }
+    } catch(e) {}
+    return null;
+  }
+
+  // ---- REST API 通用请求 ----
+  async function sbApi(method, path, body) {
+    const headers = {
+      "apikey": SUPABASE_CONFIG.anonKey,
+      "Content-Type": "application/json",
+    };
+    const token = getToken();
+    if (token) headers["Authorization"] = "Bearer " + token;
+
+    const opts = { method, headers };
+    if (body) opts.body = JSON.stringify(body);
+
+    const resp = await fetch(SUPABASE_CONFIG.url + path, opts);
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(text || resp.statusText);
+    }
+    return resp.status === 204 ? null : await resp.json();
   }
 
   // ---- 上传图片到 Supabase Storage ----
   async function uploadPhoto(blob) {
     const userId = getUserId();
-    if (!userId || !window.__auth) return null;
-    const sb = window.__auth.supabase;
-    const fileName = userId + '/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.jpg';
+    if (!userId) return null;
+    const token = getToken();
+    const fileName = userId + "/" + Date.now() + "_" + Math.random().toString(36).slice(2,8) + ".jpg";
     try {
-      const { error } = await sb.storage.from('diary-photos').upload(fileName, blob, {
-        cacheControl: '3600', upsert: false
+      const headers = { "apikey": SUPABASE_CONFIG.anonKey };
+      if (token) headers["Authorization"] = "Bearer " + token;
+      const resp = await fetch(SUPABASE_CONFIG.url + "/storage/v1/object/diary-photos/" + fileName, {
+        method: "POST", headers, body: blob
       });
-      if (error) throw error;
-      const { publicURL } = sb.storage.from('diary-photos').getPublicUrl(fileName);
-      return publicURL;
-    } catch (e) {
-      console.warn('上传照片失败:', e);
-      return null;
-    }
+      if (!resp.ok) throw new Error("Upload failed");
+      return SUPABASE_CONFIG.url + "/storage/v1/object/public/diary-photos/" + fileName;
+    } catch (e) { console.warn("上传失败:", e); return null; }
   }
 
   // ---- 保存到云端 ----
   async function syncToCloud(entry) {
     const userId = getUserId();
-    if (!userId || !window.__auth) return;
-    const sb = window.__auth.supabase;
+    const token = getToken();
+    if (!userId || !token) return;
     try {
       let photos = entry.photos || [];
       const uploadedPhotos = [];
       for (const p of photos) {
-        if (p.startsWith('data:')) {
+        if (p.startsWith("data:")) {
           const res = await fetch(p);
           const blob = await res.blob();
           const url = await uploadPhoto(blob);
@@ -85,30 +112,24 @@ const DB = (() => {
           uploadedPhotos.push(p);
         }
       }
-      const cloudEntry = {
+      await sbApi("POST", "/rest/v1/diary_entries", {
         user_id: userId, date: entry.date,
-        mood: entry.mood || '', location: entry.location || '',
-        text: entry.text || '', photos: uploadedPhotos,
+        mood: entry.mood || "", location: entry.location || "",
+        text: entry.text || "", photos: uploadedPhotos,
         shopping: entry.shopping || [],
         updated_at: new Date().toISOString()
-      };
-      const { error } = await sb.from('diary_entries').upsert(cloudEntry, {
-        onConflict: 'user_id,date'
       });
-      if (error) console.warn('云同步失败:', error);
-      else lastSyncTime = new Date();
-    } catch (e) { console.warn('云同步错误:', e); }
+      lastSyncTime = new Date();
+    } catch (e) { console.warn("云同步错误:", e); }
   }
 
   // ---- 从云端拉取 ----
   async function syncFromCloud() {
     const userId = getUserId();
-    if (!userId || !window.__auth) return 0;
-    const sb = window.__auth.supabase;
+    const token = getToken();
+    if (!userId || !token) return 0;
     try {
-      const { data, error } = await sb.from('diary_entries')
-        .select('*').eq('user_id', userId).order('date', { ascending: false });
-      if (error) throw error;
+      const data = await sbApi("GET", "/rest/v1/diary_entries?user_id=eq." + userId + "&order=date.desc");
       if (!data || !data.length) return 0;
       let count = 0;
       for (const row of data) {
@@ -117,8 +138,8 @@ const DB = (() => {
         const lt = local ? new Date(local.updated_at || 0).getTime() : 0;
         if (!local || ct >= lt) {
           await saveEntry({
-            date: row.date, mood: row.mood || '', location: row.location || '',
-            text: row.text || '', photos: row.photos || [],
+            date: row.date, mood: row.mood || "", location: row.location || "",
+            text: row.text || "", photos: row.photos || [],
             shopping: row.shopping || [], updated_at: row.updated_at
           });
           count++;
@@ -126,10 +147,10 @@ const DB = (() => {
       }
       lastSyncTime = new Date();
       return count;
-    } catch (e) { console.warn('云拉取失败:', e); return 0; }
+    } catch (e) { console.warn("云拉取失败:", e); return 0; }
   }
 
-  // ---- 保存（本地）+ 同步（云端） ----
+  // ---- 本地 + 云端同步保存 ----
   async function saveAndSync(entry) {
     entry.updated_at = new Date().toISOString();
     await saveEntry(entry);
@@ -137,7 +158,7 @@ const DB = (() => {
     return true;
   }
 
-  // ---- 本地 IndexedDB 操作 ----
+  // ---- 本地 IndexedDB ----
   async function saveEntry(entry) {
     const d = await open();
     return new Promise((resolve, reject) => {
@@ -158,9 +179,7 @@ const DB = (() => {
     });
   }
 
-  async function exportAll() {
-    return await getAllEntries();
-  }
+  async function exportAll() { return await getAllEntries(); }
 
   async function importAll(entries) {
     const d = await open();
