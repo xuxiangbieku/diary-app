@@ -1,205 +1,168 @@
-﻿// 认证模块 - 使用 Supabase Auth REST API (无需外部SDK)
+﻿// 认证模块 - 使用 Supabase Auth REST API
 (function(){
-const SUPABASE_URL = SUPABASE_CONFIG.url;
-const SUPABASE_ANON_KEY = SUPABASE_CONFIG.anonKey;
+function init() {
+  const SUPABASE_URL = SUPABASE_CONFIG.url;
+  const SUPABASE_ANON_KEY = SUPABASE_CONFIG.anonKey;
 
-let currentUser = null;
-let authListeners = [];
-let isRegister = false;
-let lastSession = null;
+  let currentUser = null;
+  let isRegister = false;
+  let lastSession = null;
 
-// DOM
-let authScreen, appMain, authEmail, authPassword, authBtn, authToggle, authError, authTitle;
+  // DOM - 每次使用时获取，防止加载时机问题
+  function $id(id) { return document.getElementById(id); }
 
-function getEls() {
-  authScreen = document.getElementById("authScreen");
-  appMain = document.getElementById("appMain");
-  authEmail = document.getElementById("authEmail");
-  authPassword = document.getElementById("authPassword");
-  authBtn = document.getElementById("authBtn");
-  authToggle = document.getElementById("authToggle");
-  authError = document.getElementById("authError");
-  authTitle = document.getElementById("authTitle");
-}
-
-function showError(m) {
-  if (authError) { authError.textContent = m; authError.style.display = "block"; }
-}
-function clearError() {
-  if (authError) { authError.style.display = "none"; authError.textContent = ""; }
-}
-
-// ---- 从 localStorage 恢复会话 ----
-function loadSession() {
-  try {
-    const s = localStorage.getItem("sb-session");
-    if (s) {
-      lastSession = JSON.parse(s);
-      currentUser = lastSession.user;
-      return true;
-    }
-  } catch(e) {}
-  return false;
-}
-
-function saveSession(s) {
-  lastSession = s;
-  currentUser = s?.user || null;
-  if (s) {
-    localStorage.setItem("sb-session", JSON.stringify(s));
-  } else {
-    localStorage.removeItem("sb-session");
+  function showError(m) {
+    const el = $id("authError");
+    if (el) { el.textContent = m; el.style.display = "block"; }
   }
-}
-
-// ---- REST API 调用 ----
-async function sbFetch(path, options) {
-  const headers = {
-    "apikey": SUPABASE_ANON_KEY,
-    "Content-Type": "application/json",
-  };
-  if (lastSession?.access_token) {
-    headers["Authorization"] = "Bearer " + lastSession.access_token;
+  function clearError() {
+    const el = $id("authError");
+    if (el) { el.style.display = "none"; el.textContent = ""; }
   }
-  const resp = await fetch(SUPABASE_URL + path, { ...options, headers });
-  const data = await resp.json();
-  if (!resp.ok) throw new Error(data.msg || data.error_description || data.error || resp.statusText);
-  return data;
-}
 
-// 注册
-async function signUp(email, password) {
-  const data = await sbFetch("/auth/v1/signup", {
-    method: "POST",
-    body: JSON.stringify({ email, password })
-  });
-  return data;
-}
+  // 从 localStorage 恢复会话
+  function loadSession() {
+    try {
+      const s = localStorage.getItem("sb-session");
+      if (s) { lastSession = JSON.parse(s); currentUser = lastSession.user; return true; }
+    } catch(e) {}
+    return false;
+  }
 
-// 登录
-async function signIn(email, password) {
-  const data = await sbFetch("/auth/v1/token?grant_type=password", {
-    method: "POST",
-    body: JSON.stringify({ email, password })
-  });
-  // 保存会话
-  saveSession(data);
-  notifyListeners(data.user);
-  return data;
-}
+  function saveSession(s) {
+    lastSession = s;
+    currentUser = s?.user || null;
+    if (s) localStorage.setItem("sb-session", JSON.stringify(s));
+    else localStorage.removeItem("sb-session");
+  }
 
-// 登出
-async function signOut() {
-  try { await sbFetch("/auth/v1/logout", { method: "POST" }); } catch(e) {}
-  saveSession(null);
-  currentUser = null;
-  notifyListeners(null);
-  showAuth();
-}
-
-// 获取用户信息
-async function getUser() {
-  if (!lastSession?.access_token) return null;
-  try {
-    const data = await sbFetch("/auth/v1/user");
-    currentUser = data;
+  async function sbFetch(path, options) {
+    const headers = {
+      "apikey": SUPABASE_ANON_KEY,
+      "Content-Type": "application/json",
+    };
+    if (lastSession?.access_token) headers["Authorization"] = "Bearer " + lastSession.access_token;
+    const resp = await fetch(SUPABASE_URL + path, { ...options, headers });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.msg || data.error_description || data.error || data.message || resp.statusText);
     return data;
-  } catch(e) {
+  }
+
+  async function signUp(email, password) {
+    return await sbFetch("/auth/v1/signup", {
+      method: "POST",
+      body: JSON.stringify({ email, password })
+    });
+  }
+
+  async function signIn(email, password) {
+    const data = await sbFetch("/auth/v1/token?grant_type=password", {
+      method: "POST",
+      body: JSON.stringify({ email, password })
+    });
+    saveSession(data);
+    return data;
+  }
+
+  async function signOut() {
+    try { await sbFetch("/auth/v1/logout", { method: "POST" }); } catch(e) {}
     saveSession(null);
-    return null;
-  }
-}
-
-async function setupAuthUI() {
-  getEls();
-  if (!authScreen || !appMain) return;
-
-  // 尝试从本地恢复会话
-  if (loadSession()) {
-    showApp();
-    return;
+    currentUser = null;
+    showAuth();
   }
 
-  // 登录按钮
-  if (authBtn) {
+  function toggleMode() {
+    isRegister = !isRegister;
+    clearError();
+    const t = $id("authTitle"), b = $id("authBtn"), tg = $id("authToggle");
+    if (t) t.textContent = isRegister ? "创建账号" : "登录";
+    if (b) b.textContent = isRegister ? "注 册" : "登 录";
+    if (tg) tg.innerHTML = isRegister
+      ? "已有账号？<a href='#'>去登录</a>"
+      : "没有账号？<a href='#'>注册一个</a>";
+  }
+
+  function showAuth() {
+    const a = $id("authScreen"), m = $id("appMain");
+    if (a) a.style.display = "flex";
+    if (m) m.style.display = "none";
+  }
+
+  function showApp() {
+    const a = $id("authScreen"), m = $id("appMain");
+    if (a) a.style.display = "none";
+    if (m) m.style.display = "flex";
+    if (window.__onAuthReady) window.__onAuthReady(currentUser);
+  }
+
+  function setupAuth() {
+    // 先检查本地会话
+    if (loadSession()) { showApp(); return; }
+
+    const authBtn = $id("authBtn");
+    if (!authBtn) return;
+
     authBtn.onclick = async () => {
       clearError();
-      const email = authEmail?.value?.trim();
-      const password = authPassword?.value?.trim();
+      const email = $id("authEmail")?.value?.trim();
+      const password = $id("authPassword")?.value?.trim();
+
       if (!email || !password) { showError("请填写邮箱和密码"); return; }
       if (!email.includes("@")) { showError("请输入有效的邮箱地址"); return; }
       if (password.length < 6) { showError("密码至少6位"); return; }
+
       authBtn.disabled = true;
       authBtn.textContent = isRegister ? "注册中..." : "登录中...";
       try {
         if (isRegister) {
           const result = await signUp(email, password);
-          if (result.id) {
-            // 注册成功自动登录
+          if (result.id || result.user?.id) {
+            // 注册成功，尝试自动登录
             await signIn(email, password);
           } else {
             showError("注册成功！请查看邮箱验证或直接登录");
             setTimeout(() => toggleMode(), 1500);
           }
         } else {
-          await signIn(email, password);
-          showApp();
+          const result = await signIn(email, password);
+          if (result.user || result.access_token) showApp();
         }
       } catch (err) {
-        console.error("Auth error:", err);
-        if (err.message.includes("Invalid login credentials")) {
-          showError("邮箱或密码错误");
-        } else if (err.message.includes("already registered")) {
-          showError("该邮箱已注册，请直接登录");
-        } else {
-          showError(err.message || "操作失败，请重试");
-        }
+        console.error("Auth:", err.message);
+        if (err.message.includes("Invalid login credentials")) showError("邮箱或密码错误");
+        else if (err.message.includes("already registered")) showError("该邮箱已注册，请直接登录");
+        else if (err.message.includes("duplicate key") || err.message.includes("already exists")) showError("该邮箱已注册，请直接登录");
+        else showError(err.message || "操作失败，请重试");
       }
       authBtn.disabled = false;
       authBtn.textContent = isRegister ? "注 册" : "登 录";
     };
+
+    // 切换登录/注册
+    const toggle = $id("authToggle");
+    if (toggle) toggle.onclick = toggleMode;
+
+    // 回车提交
+    const pwd = $id("authPassword");
+    if (pwd) pwd.onkeydown = (e) => { if (e.key === "Enter") authBtn?.click(); };
+    const em = $id("authEmail");
+    if (em) em.onkeydown = (e) => { if (e.key === "Enter") pwd?.focus(); };
   }
 
-  if (authToggle) authToggle.onclick = toggleMode;
-  if (authPassword) authPassword.onkeydown = (e) => { if (e.key === "Enter") authBtn?.click(); };
-  if (authEmail) authEmail.onkeydown = (e) => { if (e.key === "Enter") authPassword?.focus(); };
+  // 导出
+  window.__auth = {
+    getUser: () => currentUser,
+  };
+  window.__logout = signOut;
+
+  // 等DOM加载完再启动
+  setupAuth();
 }
 
-function toggleMode() {
-  isRegister = !isRegister;
-  clearError();
-  if (authTitle) authTitle.textContent = isRegister ? "创建账号" : "登录";
-  if (authBtn) authBtn.textContent = isRegister ? "注 册" : "登 录";
-  if (authToggle) authToggle.innerHTML = isRegister
-    ? "已有账号？<a href='#'>去登录</a>"
-    : "没有账号？<a href='#'>注册一个</a>";
-}
-
-function showAuth() {
-  if (authScreen) authScreen.style.display = "flex";
-  if (appMain) appMain.style.display = "none";
-}
-
-function showApp() {
-  if (authScreen) authScreen.style.display = "none";
-  if (appMain) appMain.style.display = "flex";
-  if (window.__onAuthReady) window.__onAuthReady(currentUser);
-}
-
-function notifyListeners(user) {
-  authListeners.forEach(fn => fn(user));
-}
-
-window.__auth = {
-  getUser: () => currentUser,
-  onAuthChange: (fn) => authListeners.push(fn),
-};
-window.__logout = signOut;
-
-// 启动
-if (document.readyState === "complete") {
-  setupAuthUI();
+// 确保DOM加载完成
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
 } else {
-  window.addEventListener("load", setupAuthUI);
+  init();
 }
 })();
