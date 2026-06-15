@@ -63,10 +63,15 @@ function renderCalendar(year, month) {
     d.appendChild(n);
     g.appendChild(d);
   }
+  refreshDots();
+}
+
+function refreshDots() {
   DB.getAllEntries().then(entries => {
     const dots = {};
     entries.forEach(e => { dots[e.date] = e; });
     document.querySelectorAll(".day-cell:not(.other-month)").forEach(cell => {
+      cell.querySelector(".dots")?.remove();
       const ds = cell.dataset.date;
       const e = dots[ds];
       if (e) {
@@ -143,7 +148,6 @@ function renderPhotos(photos, containerId, deletable) {
     }
     c.appendChild(div);
   });
-  // Add "+" button always at the end, but only in editor mode
   if (deletable) {
     const addBtn = document.createElement("div");
     addBtn.className = "photo-add-btn";
@@ -214,6 +218,7 @@ function closeEdit() {
   document.getElementById("editModal").style.display = "none";
 }
 
+// ---- 保存 + 同步到云端 ----
 async function saveEntry() {
   state.text = document.getElementById("diaryInput").value;
   state.location = document.getElementById("locationInput").value;
@@ -228,12 +233,23 @@ async function saveEntry() {
     photos: state.photos,
     shopping: state.shopping
   };
-  await DB.saveEntry(entry);
+  await DB.saveAndSync(entry); // 本地 + 云端
   closeEdit();
   selectDay(editingDate);
   renderCalendar(curYear, curMonth);
 }
 
+function showToast(msg) {
+  const old = document.querySelector(".toast");
+  if (old) old.remove();
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ---- 初始化（APP + 认证） ----
 function init() {
   const now = new Date();
   renderCalendar(now.getFullYear(), now.getMonth());
@@ -246,6 +262,7 @@ function init() {
   document.getElementById("nextMonth").onclick = () => { let m = curMonth + 1, y = curYear; if (m > 11) { m = 0; y++; } renderCalendar(y, m); };
   document.getElementById("backBtn").onclick = () => { document.getElementById("rightPanel").classList.remove("open"); };
 
+  // FAB 按钮：快速添加今天的日记
   document.getElementById("fabBtn").onclick = () => {
     const today = fmt(new Date());
     selectedDate = today;
@@ -272,7 +289,7 @@ function init() {
     }, () => {}, { enableHighAccuracy: true });
   };
 
-  // Photo upload
+  // 照片上传
   document.getElementById("photoInput").onchange = (e) => {
     const files = Array.from(e.target.files);
     const doRead = (i) => {
@@ -303,6 +320,7 @@ function init() {
     if (e.key === "Escape") document.getElementById("shopInputRow").style.display = "none";
   };
 
+  // 导出
   document.getElementById("exportBtn").onclick = async () => {
     const data = await DB.exportAll();
     const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
@@ -312,13 +330,42 @@ function init() {
     a.click();
   };
 
+  // 统计
   document.getElementById("statsBtn").onclick = async () => {
     const entries = await DB.getAllEntries();
     const total = entries.length;
     const photoCount = entries.filter(e => e.photos && e.photos.length).length;
     const shopCount = entries.filter(e => e.shopping && e.shopping.length).length;
-    alert("\u{1F4CA} \u7EDF\u8BA1\u62A5\u544A\n\n\u5171 " + total + " \u5929\u8BB0\u5F55\n\u542B\u7167\u7247: " + photoCount + " \u5929\n\u542B\u8D2D\u7269\u6E05\u5355: " + shopCount + " \u5929");
+    const syncInfo = DB.getLastSync() ? '\\n\u2601\uFE0F \u5DF2\u540C\u6B65\u81F3\u4E91\u7AEF' : '\\n\u2601\uFE0F \u672A\u540C\u6B65';
+    alert("\u{1F4CA} \u7EDF\u8BA1\u62A5\u544A\\n\\n\u5171 " + total + " \u5929\u8BB0\u5F55\\n\u542B\u7167\u7247: " + photoCount + " \u5929\\n\u542B\u8D2D\u7269\u6E05\u5355: " + shopCount + " \u5929" + syncInfo);
   };
+
+  // 登出按钮
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.onclick = async () => {
+      if (confirm('\u786E\u5B9A\u8981\u767B\u51FA\u5417\uFF1F')) {
+        await window.__logout();
+        showToast('\u5DF2\u767B\u51FA');
+      }
+    };
+  }
+
+  const syncBtn = document.getElementById("syncBtn");
+  if (syncBtn) {
+    syncBtn.onclick = async () => {
+      const user = window.__auth ? window.__auth.getUser() : null;
+      if (!user) { showToast('\u8BF7\u5148\u767B\u5F55'); return; }
+      syncBtn.disabled = true;
+      syncBtn.textContent = '\u540C\u6B65\u4E2D...';
+      const count = await DB.syncFromCloud();
+      renderCalendar(curYear, curMonth);
+      if (selectedDate) loadEntry(selectedDate);
+      showToast('\u540C\u6B65\u5B8C\u6210\uFF0C\u66F4\u65B0\u4E86 ' + count + ' \u6761\u8BB0\u5F55');
+      syncBtn.disabled = false;
+      syncBtn.textContent = '\u2601\uFE0F \u540C\u6B65';
+    };
+  }
 
   dbReady();
 }
@@ -327,6 +374,16 @@ function dbReady() {
   document.getElementById("statText").textContent = "\u{1F4C5} " + selectedDate;
 }
 
+// 认证完成后执行云端同步
+window.__onAuthReady = async function(user) {
+  if (user) {
+    const count = await DB.syncFromCloud();
+    renderCalendar(curYear, curMonth);
+    if (selectedDate) loadEntry(selectedDate);
+    if (count > 0) showToast('\u2601\uFE0F \u4ECE\u4E91\u7AEF\u540C\u6B65\u4E86 ' + count + ' \u6761\u65E5\u8BB0');
+  }
+};
+
+// 启动
 window.addEventListener("load", init);
 })();
-
