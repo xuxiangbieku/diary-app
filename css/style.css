@@ -164,3 +164,27 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font
   font-size: 13px; color: #e74c3c;
   display: none; padding: 4px 0;
 }
+
+/* ====== 手机端操作栏 ====== */
+.mobile-toolbar {
+  display: none;
+  padding: 6px 16px;
+  border-top: 1px solid var(--border);
+  gap: 4px;
+  flex-shrink: 0;
+}
+@media(max-width:767px){
+  .mobile-toolbar{display:flex;justify-content:space-around}
+}
+.mobile-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  transition: background 0.15s;
+}
+.mobile-btn:hover { background: var(--hover); }
+.mobile-btn:active { background: var(--border); transform: scale(0.95); }
