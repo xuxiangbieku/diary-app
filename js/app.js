@@ -174,8 +174,16 @@ function renderShopping(items, containerId, deletable) {
     cb.type = "checkbox";
     cb.checked = item.done || false;
     cb.onchange = () => {
-      state.shopping[i].done = cb.checked;
-      if (containerId === "shoppingDisplay") renderShopping(state.shopping, "shoppingDisplay", false);
+      item.done = cb.checked;
+      if (containerId === "shoppingDisplay") {
+        renderShopping(items, "shoppingDisplay", false);
+        // 保存到数据库并同步云端
+        if (currentEntry && selectedDate) {
+          currentEntry.shopping = items;
+          currentEntry.updated_at = new Date().toISOString();
+          DB.saveAndSync(currentEntry);
+        }
+      }
     };
     div.appendChild(cb);
     const txt = document.createElement("span");
@@ -237,7 +245,9 @@ async function saveEntry() {
     closeEdit();
     selectDay(editingDate);
     renderCalendar(curYear, curMonth);
-    showToast(cloudSyncOk ? '\u2714\uFE0F \u5DF2\u4FDD\u5B58\u5E76\u540C\u6B65' : '\u2714\uFE0F \u5DF2\u4FDD\u5B58\u672C\u5730');\n      // \u81EA\u52A8\u4ECE\u4E91\u7AEF\u62C9\u53D6\u5176\u4ED6\u8BBE\u5907\u7684\u6570\u636E\n      DB.syncFromCloud().then(cnt => { if (cnt > 0) { renderCalendar(curYear, curMonth); if (selectedDate) loadEntry(selectedDate); } });
+    showToast(cloudSyncOk ? '\u2714\uFE0F \u5DF2\u4FDD\u5B58\u5E76\u540C\u6B65' : '\u2714\uFE0F \u5DF2\u4FDD\u5B58\u672C\u5730');
+    // \u81EA\u52A8\u4ECE\u4E91\u7AEF\u62C9\u53D6\u5176\u4ED6\u8BBE\u5907\u7684\u6570\u636E
+    DB.syncFromCloud().then(cnt => { if (cnt > 0) { renderCalendar(curYear, curMonth); if (selectedDate) loadEntry(selectedDate); } });
 }
 
 function showToast(msg) {
@@ -358,8 +368,8 @@ function init() {
     const total = entries.length;
     const photoCount = entries.filter(e => e.photos && e.photos.length).length;
     const shopCount = entries.filter(e => e.shopping && e.shopping.length).length;
-    const syncInfo = DB.getLastSync() ? '\\n\u2601\uFE0F \u5DF2\u540C\u6B65\u81F3\u4E91\u7AEF' : '\\n\u2601\uFE0F \u672A\u540C\u6B65';
-    alert("\u{1F4CA} \u7EDF\u8BA1\u62A5\u544A\\n\\n\u5171 " + total + " \u5929\u8BB0\u5F55\\n\u542B\u7167\u7247: " + photoCount + " \u5929\\n\u542B\u8D2D\u7269\u6E05\u5355: " + shopCount + " \u5929" + syncInfo);
+    const syncInfo = DB.getLastSync() ? '\n\u2601\uFE0F \u5DF2\u540C\u6B65\u81F3\u4E91\u7AEF' : '\n\u2601\uFE0F \u672A\u540C\u6B65';
+    alert("\uD83D\uDCCA \u7EDF\u8BA1\u62A5\u544A\n\n\u5171 " + total + " \u5929\u8BB0\u5F55\n\u542B\u7167\u7247: " + photoCount + " \u5929\n\u542B\u8D2D\u7269\u6E05\u5355: " + shopCount + " \u5929" + syncInfo);
   };
 
   // �ǳ���ť

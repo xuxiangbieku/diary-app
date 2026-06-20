@@ -75,7 +75,10 @@ const DB = (() => {
       const text = await resp.text();
       throw new Error(text || resp.statusText);
     }
-    return resp.status === 204 ? null : await resp.json();
+    const ct = resp.headers.get("content-type") || "";
+    if (resp.status === 204 || !ct.includes("json")) return null;
+    const bodyText = await resp.text();
+    return bodyText ? JSON.parse(bodyText) : null;
   }
 
   // ---- 上传图片到 Supabase Storage ----
@@ -118,7 +121,7 @@ const DB = (() => {
         mood: entry.mood || "", location: entry.location || "",
         text: entry.text || "", photos: uploadedPhotos,
         shopping: entry.shopping || [],
-        updated_at: new Date().toISOString()
+        updated_at: entry.updated_at || new Date().toISOString()
       }, { "Prefer": "resolution=merge-duplicates" });
       lastSyncTime = new Date();
       return true;
