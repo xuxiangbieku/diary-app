@@ -404,16 +404,15 @@ function dbReady() {
 // ��֤��ɺ�ִ���ƶ�ͬ��
 window.__onAuthReady = async function(user) {
   if (user) {
-    // \u5148\u4E0A\u4F20\u672C\u5730\u6570\u636E\u5230\u4E91\u7AEF
     const allLocal = await DB.getAllEntries();
     for (const entry of allLocal) {
       try { await DB.syncToCloud(entry); } catch(e) {}
-      startAutoSync();\n  }
-    // \u518D\u4ECE\u4E91\u7AEF\u62C9\u53D6
+    }
+    startAutoSync();
     const count = await DB.syncFromCloud();
     renderCalendar(curYear, curMonth);
     if (selectedDate) loadEntry(selectedDate);
-    if (count > 0) showToast('\u2601\uFE0F \u540C\u6B65\u5B8C\u6210\uFF0C\u66F4\u65B0 ' + count + ' \u6761\u65E5\u8BB0');
+    if (count > 0) showToast("☁️ 同步完成，更新 " + count + " 条日记");
   }
 };
 
