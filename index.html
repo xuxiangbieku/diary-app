@@ -6,43 +6,43 @@
 <meta name="theme-color" content="#d68d45">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<title>¼Ç¡¤ÈÕ¼Ç</title>
+<title>ï¿½Ç¡ï¿½ï¿½Õ¼ï¿½</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- ====== µÇÂ¼/×¢²á½çÃæ ====== -->
+<!-- ====== ï¿½ï¿½Â¼/×¢ï¿½ï¿½ï¿½ï¿½ï¿½ ====== -->
 <div class="auth-screen" id="authScreen">
   <div class="auth-card">
     <div class="auth-logo">&#x2302;</div>
-    <h1 class="auth-title" id="authTitle">µÇÂ¼</h1>
-    <p class="auth-desc">µÇÂ¼ºóÈÕ¼Ç×Ô¶¯Í¬²½µ½ÔÆ¶Ë</p>
+    <h1 class="auth-title" id="authTitle">ï¿½ï¿½Â¼</h1>
+    <p class="auth-desc">ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½Ô¶ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½</p>
     <div class="auth-form">
       <div class="auth-field">
-        <input type="email" id="authEmail" placeholder="ÓÊÏäµØÖ·" autocomplete="email">
+        <input type="email" id="authEmail" placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½Ö·" autocomplete="email">
       </div>
       <div class="auth-field">
-        <input type="password" id="authPassword" placeholder="ÃÜÂë£¨ÖÁÉÙ6Î»£©" autocomplete="current-password">
+        <input type="password" id="authPassword" placeholder="ï¿½ï¿½ï¿½ë£¨ï¿½ï¿½ï¿½ï¿½6Î»ï¿½ï¿½" autocomplete="current-password">
       </div>
       <div class="auth-error" id="authError"></div>
-      <button class="auth-btn" id="authBtn">µÇ Â¼</button>
+      <button class="auth-btn" id="authBtn">ï¿½ï¿½ Â¼</button>
       <div class="auth-toggle" id="authToggle">
-        Ã»ÓÐÕËºÅ£¿<a href="#">×¢²áÒ»¸ö</a>
+        Ã»ï¿½ï¿½ï¿½ËºÅ£ï¿½<a href="#">×¢ï¿½ï¿½Ò»ï¿½ï¿½</a>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ====== Ö÷Ó¦ÓÃ ====== -->
+<!-- ====== ï¿½ï¿½Ó¦ï¿½ï¿½ ====== -->
 <div class="app" id="appMain" style="display:none;">
 <div class="left-panel">
 <div class="header desktop-header">
-<h1>&#x2302; ÈÕ¼Ç</h1>
+<h1>&#x2302; ï¿½Õ¼ï¿½</h1>
 <div class="header-actions">
-<button class="icon-btn" id="syncBtn" title="Í¬²½µ½ÔÆ¶Ë">&#x2601;&#xFE0F;</button>
-<button class="icon-btn" id="statsBtn" title="Í³¼Æ">&#x1F4CA;</button>
-<button class="icon-btn" id="exportBtn" title="µ¼³ö">&#x2B06;</button>
-<button class="icon-btn" id="logoutBtn" title="ÍË³öµÇÂ¼">&#x1F6AA;</button>
+<button class="icon-btn" id="syncBtn" title="Í¬ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½">&#x2601;&#xFE0F;</button>
+<button class="icon-btn" id="statsBtn" title="Í³ï¿½ï¿½">&#x1F4CA;</button>
+<button class="icon-btn" id="exportBtn" title="ï¿½ï¿½ï¿½ï¿½">&#x2B06;</button>
+<button class="icon-btn" id="logoutBtn" title="ï¿½Ë³ï¿½ï¿½ï¿½Â¼">&#x1F6AA;</button>
 </div>
 </div>
 <div class="month-nav">
@@ -52,12 +52,13 @@
 <button id="nextMonth">&#x203A;</button>
 </div>
 </div>
-<div class="weekdays"><span>Ò»</span><span>¶þ</span><span>Èý</span><span>ËÄ</span><span>Îå</span><span>Áù</span><span>ÈÕ</span></div>
+<div class="weekdays"><span>Ò»</span><span>ï¿½ï¿½</span><span>ï¿½ï¿½</span><span>ï¿½ï¿½</span><span>ï¿½ï¿½</span><span>ï¿½ï¿½</span><span>ï¿½ï¿½</span></div>
 <div class="calendar-wrap"><div class="calendar-grid" id="calendarGrid"></div></div>
 <div class="mobile-toolbar"><button class="mobile-btn" id="syncBtnMobile">&#x2601;&#xFE0F;</button><button class="mobile-btn" id="statsBtnMobile">&#x1F4CA;</button><button class="mobile-btn" id="exportBtnMobile">&#x2B06;</button><button class="mobile-btn" id="logoutBtnMobile">&#x1F6AA;</button></div>
+<div class="mobile-toolbar"><button class="mobile-btn" id="syncBtnMobile">â˜ï¸</button><button class="mobile-btn" id="statsBtnMobile">ðŸ“Š</button><button class="mobile-btn" id="exportBtnMobile">â¬†ï¸</button><button class="mobile-btn" id="logoutBtnMobile">ðŸšª</button></div>
 <div class="today-bar">
-<span class="tl">½ñÈÕ</span>
-<span class="stat" id="statText">µã»÷ÈÕÆÚ²é¿´</span>
+<span class="tl">ï¿½ï¿½ï¿½ï¿½</span>
+<span class="stat" id="statText">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú²é¿´</span>
 </div>
 </div>
 <div class="right-panel" id="rightPanel">
@@ -67,13 +68,13 @@
 <div class="date-sub" id="entrySub"></div>
 </div>
 <div class="entry-actions">
-<button class="btn-back" id="backBtn">&#x2190; ·µ»Ø</button>
-<button class="btn-edit" id="editBtn">&#x270E; ±à¼­</button></div>
+<button class="btn-back" id="backBtn">&#x2190; ï¿½ï¿½ï¿½ï¿½</button>
+<button class="btn-edit" id="editBtn">&#x270E; ï¿½à¼­</button></div>
 </div>
 <div class="entry-body" id="entryBody">
 <div class="empty-state" id="emptyState">
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-<p id="emptyHint">µã»÷ÈÕÀúÉÏµÄÈÕÆÚ<br>²é¿´»ò¼ÇÂ¼ÕâÒ»Ìì</p>
+<p id="emptyHint">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¿½<br>ï¿½é¿´ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ò»ï¿½ï¿½</p>
 </div>
 <div id="entryContent" style="display:none;">
 <div class="mood-section"><button class="mood-tag" id="moodDisplay"></button></div>
@@ -89,47 +90,47 @@
 <div class="modal-overlay" id="editModal" style="display:none;">
 <div class="modal-content">
 <div class="modal-header">
-<h2 id="modalTitle">&#x270E; ±à¼­ÈÕ¼Ç</h2>
-<button class="modal-save" id="saveBtn">&#x2713; ±£´æ</button>
+<h2 id="modalTitle">&#x270E; ï¿½à¼­ï¿½Õ¼ï¿½</h2>
+<button class="modal-save" id="saveBtn">&#x2713; ï¿½ï¿½ï¿½ï¿½</button>
 </div>
 <div class="modal-body">
 <div class="mood-section">
-<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F31F; ÐÄÇé</div>
+<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F31F; ï¿½ï¿½ï¿½ï¿½</div>
 <div class="mood-picker" id="moodPicker">
-<button data-mood="&#x1F60A;">&#x1F60A; ÓäÔÃ</button>
-<button data-mood="&#x1F60C;">&#x1F60C; Æ½¾²</button>
-<button data-mood="&#x1F642;">&#x1F642; »¹ÐÐ</button>
-<button data-mood="&#x1F614;">&#x1F614; µÍÂä</button>
-<button data-mood="&#x1F620;">&#x1F620; ·³Ôê</button>
-<button data-mood="&#x1F4AA;">&#x1F4AA; ÔªÆø</button>
-<button data-mood="&#x1F929;">&#x1F929; ¸Ð¶¯</button>
+<button data-mood="&#x1F60A;">&#x1F60A; ï¿½ï¿½ï¿½ï¿½</button>
+<button data-mood="&#x1F60C;">&#x1F60C; Æ½ï¿½ï¿½</button>
+<button data-mood="&#x1F642;">&#x1F642; ï¿½ï¿½ï¿½ï¿½</button>
+<button data-mood="&#x1F614;">&#x1F614; ï¿½ï¿½ï¿½ï¿½</button>
+<button data-mood="&#x1F620;">&#x1F620; ï¿½ï¿½ï¿½ï¿½</button>
+<button data-mood="&#x1F4AA;">&#x1F4AA; Ôªï¿½ï¿½</button>
+<button data-mood="&#x1F929;">&#x1F929; ï¿½Ð¶ï¿½</button>
 </div>
 </div>
 <div class="location-section">
-<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F4CD; Î»ÖÃ</div>
+<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F4CD; Î»ï¿½ï¿½</div>
 <div class="location-input">
-<input type="text" id="locationInput" placeholder="ÊäÈëµØµã»ò×Ô¶¯¶¨Î»...">
+<input type="text" id="locationInput" placeholder="ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½Î»...">
 <button class="loc-btn" id="geoBtn">&#x1F4CD;</button>
 </div>
 </div>
 <div class="photo-section">
-<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F4F7; ÕÕÆ¬</div>
+<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F4F7; ï¿½ï¿½Æ¬</div>
 <div class="photo-strip" id="photoGrid" style="padding:0;"></div>
 <input type="file" id="photoInput" accept="image/*" multiple style="display:none;">
 </div>
 <div class="diary-section">
-<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x270D; ÈÕ¼Ç</div>
-<textarea class="diary-textarea" id="diaryInput" placeholder="½ñÌì·¢ÉúÁËÊ²Ã´£¿ÏëÐ´Ê²Ã´¶¼¿ÉÒÔ..."></textarea>
+<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x270D; ï¿½Õ¼ï¿½</div>
+<textarea class="diary-textarea" id="diaryInput" placeholder="ï¿½ï¿½ï¿½ì·¢ï¿½ï¿½ï¿½ï¿½Ê²Ã´ï¿½ï¿½ï¿½ï¿½Ð´Ê²Ã´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½..."></textarea>
 </div>
 <div class="shopping-section">
 <div class="shop-header">
-<span class="shop-title">&#x1F6D2; ¹ºÎïÇåµ¥</span>
-<button class="shop-add" id="shopAddBtn">+ Ìí¼Ó</button>
+<span class="shop-title">&#x1F6D2; ï¿½ï¿½ï¿½ï¿½ï¿½åµ¥</span>
+<button class="shop-add" id="shopAddBtn">+ ï¿½ï¿½ï¿½</button>
 </div>
 <div class="shop-list" id="shopList"></div>
 <div class="shop-input-row" id="shopInputRow" style="display:none;">
-<input type="text" id="shopInput" placeholder="ÊäÈëÉÌÆ·...">
-<button id="shopConfirm">Ìí¼Ó</button>
+<input type="text" id="shopInput" placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ·...">
+<button id="shopConfirm">ï¿½ï¿½ï¿½</button>
 </div>
 </div>
 </div>
