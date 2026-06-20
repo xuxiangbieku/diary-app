@@ -233,11 +233,11 @@ async function saveEntry() {
     photos: state.photos,
     shopping: state.shopping
   };
-    await DB.saveAndSync(entry);
+    const cloudSyncOk = await DB.saveAndSync(entry);
     closeEdit();
     selectDay(editingDate);
     renderCalendar(curYear, curMonth);
-    showToast('\u2714\uFE0F \u5DF2\u4FDD\u5B58');
+    showToast(cloudSyncOk ? '\u2714\uFE0F \u5DF2\u4FDD\u5B58\u5E76\u540C\u6B65\u4E91\u7AEF' : '\u2714\uFE0F \u5DF2\u4FDD\u5B58\u672C\u5730\uFF0C\u4E91\u540C\u6B65\u5931\u8D25');
 }
 
 function showToast(msg) {

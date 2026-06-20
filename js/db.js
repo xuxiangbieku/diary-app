@@ -123,7 +123,7 @@ const DB = (() => {
       lastSyncTime = new Date();
       return true;
     } catch (e) {
-      console.error("\u4E91\u540C\u6B65\u9519\u8BEF:", e && e.message ? e.message : e);
+      console.error("\u2601\uFE0F \u4E91\u540C\u6B65\u8BE6\u7EC6\u9519\u8BEF:", e && e.message ? e.message : e);
       return false;
     }
   }
