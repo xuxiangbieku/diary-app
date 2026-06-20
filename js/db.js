@@ -1,4 +1,4 @@
-﻿// -*- coding: utf-8 -*-
+// -*- coding: utf-8 -*-
 // 数据库模块 - 本地 IndexedDB + Supabase REST API
 const DB = (() => {
   const DB_NAME = "DiaryDB", DB_VER = 1, STORE = "entries";
@@ -57,11 +57,12 @@ const DB = (() => {
     return null;
   }
 
-  // ---- REST API 通用请求 ----
-  async function sbApi(method, path, body) {
+  // ---- REST API 通用请求（支持额外请求头）----
+  async function sbApi(method, path, body, extraHeaders) {
     const headers = {
       "apikey": SUPABASE_CONFIG.anonKey,
       "Content-Type": "application/json",
+      ...extraHeaders,
     };
     const token = getToken();
     if (token) headers["Authorization"] = "Bearer " + token;
@@ -94,7 +95,7 @@ const DB = (() => {
     } catch (e) { console.warn("上传失败:", e); return null; }
   }
 
-  // ---- 保存到云端 ----
+  // ---- 保存到云端（使用 upsert 防止冲突）----
   async function syncToCloud(entry) {
     const userId = getUserId();
     const token = getToken();
@@ -118,7 +119,7 @@ const DB = (() => {
         text: entry.text || "", photos: uploadedPhotos,
         shopping: entry.shopping || [],
         updated_at: new Date().toISOString()
-      });
+      }, { "Prefer": "resolution=merge-duplicates" });
       lastSyncTime = new Date();
     } catch (e) { console.warn("云同步错误:", e); }
   }

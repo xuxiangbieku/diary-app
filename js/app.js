@@ -218,7 +218,7 @@ function closeEdit() {
   document.getElementById("editModal").style.display = "none";
 }
 
-// ---- ±£´æ + Í¬²½µ½ÔÆ¶Ë ----
+// ---- ï¿½ï¿½ï¿½ï¿½ + Í¬ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ ----
 async function saveEntry() {
   state.text = document.getElementById("diaryInput").value;
   state.location = document.getElementById("locationInput").value;
@@ -233,7 +233,7 @@ async function saveEntry() {
     photos: state.photos,
     shopping: state.shopping
   };
-  await DB.saveAndSync(entry); // ±¾µØ + ÔÆ¶Ë
+  await DB.saveAndSync(entry); // ï¿½ï¿½ï¿½ï¿½ + ï¿½Æ¶ï¿½
   closeEdit();
   selectDay(editingDate);
   renderCalendar(curYear, curMonth);
@@ -249,7 +249,7 @@ function showToast(msg) {
   setTimeout(() => t.remove(), 2500);
 }
 
-// ---- ³õÊ¼»¯£¨APP + ÈÏÖ¤£© ----
+// ---- ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½APP + ï¿½ï¿½Ö¤ï¿½ï¿½ ----
 function init() {
   const now = new Date();
   renderCalendar(now.getFullYear(), now.getMonth());
@@ -262,7 +262,7 @@ function init() {
   document.getElementById("nextMonth").onclick = () => { let m = curMonth + 1, y = curYear; if (m > 11) { m = 0; y++; } renderCalendar(y, m); };
   document.getElementById("backBtn").onclick = () => { document.getElementById("rightPanel").classList.remove("open"); };
 
-  // FAB °´Å¥£º¿ìËÙÌí¼Ó½ñÌìµÄÈÕ¼Ç
+  // FAB ï¿½ï¿½Å¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½
   document.getElementById("fabBtn").onclick = () => {
     const today = fmt(new Date());
     selectedDate = today;
@@ -289,7 +289,7 @@ function init() {
     }, () => {}, { enableHighAccuracy: true });
   };
 
-  // ÕÕÆ¬ÉÏ´«
+  // ï¿½ï¿½Æ¬ï¿½Ï´ï¿½
   document.getElementById("photoInput").onchange = (e) => {
     const files = Array.from(e.target.files);
     const doRead = (i) => {
@@ -320,8 +320,8 @@ function init() {
     if (e.key === "Escape") document.getElementById("shopInputRow").style.display = "none";
   };
 
-  // µ¼³ö
-  // ÊÖ»ú¶Ë°´Å¥¹ØÁªµ½×ÀÃæ¶Ë°´Å¥
+  // ï¿½ï¿½ï¿½ï¿½
+  // ï¿½Ö»ï¿½ï¿½Ë°ï¿½Å¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë°ï¿½Å¥
   ['syncBtn','statsBtn','exportBtn','logoutBtn'].forEach(id => {
     const m = document.getElementById(id+'Mobile');
     if (m) m.onclick = () => document.getElementById(id)?.click();
@@ -336,7 +336,7 @@ function init() {
     a.click();
   };
 
-  // Í³¼Æ
+  // Í³ï¿½ï¿½
   document.getElementById("statsBtn").onclick = async () => {
     const entries = await DB.getAllEntries();
     const total = entries.length;
@@ -346,7 +346,7 @@ function init() {
     alert("\u{1F4CA} \u7EDF\u8BA1\u62A5\u544A\\n\\n\u5171 " + total + " \u5929\u8BB0\u5F55\\n\u542B\u7167\u7247: " + photoCount + " \u5929\\n\u542B\u8D2D\u7269\u6E05\u5355: " + shopCount + " \u5929" + syncInfo);
   };
 
-  // µÇ³ö°´Å¥
+  // ï¿½Ç³ï¿½ï¿½ï¿½Å¥
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
     logoutBtn.onclick = async () => {
@@ -361,36 +361,47 @@ function init() {
   if (syncBtn) {
     syncBtn.onclick = async () => {
       const user = window.__auth ? window.__auth.getUser() : null;
-      if (!user) { showToast('\u8BF7\u5148\u767B\u5F55'); return; }
+      if (!user) { showToast('è¯·å…ˆç™»å½•'); return; }
       syncBtn.disabled = true;
-      syncBtn.textContent = '\u540C\u6B65\u4E2D...';
+      syncBtn.textContent = 'åŒæ­¥ä¸­...';
+      // 1. å…ˆä¸Šä¼ æœ¬åœ°æ‰€æœ‰æ•°æ®åˆ°äº‘ç«¯
+      const allEntries = await DB.getAllEntries();
+      let pushCount = 0;
+      for (const entry of allEntries) {
+        try { await DB.syncToCloud(entry); pushCount++; } catch(e) {}
+      }
+      // 2. å†ä»Žäº‘ç«¯æ‹‰å–æœ€æ–°æ•°æ®åˆ°æœ¬åœ°
       const count = await DB.syncFromCloud();
       renderCalendar(curYear, curMonth);
       if (selectedDate) loadEntry(selectedDate);
-      showToast('\u540C\u6B65\u5B8C\u6210\uFF0C\u66F4\u65B0\u4E86 ' + count + ' \u6761\u8BB0\u5F55');
+      showToast('â˜ï¸ åŒæ­¥å®Œæˆï¼Œä¸Šä¼ ' + pushCount + 'æ¡ï¼Œæ›´æ–°' + count + 'æ¡');
       syncBtn.disabled = false;
-      syncBtn.textContent = '\u2601\uFE0F \u540C\u6B65';
+      syncBtn.textContent = 'â˜ï¸ åŒæ­¥';
     };
-  }
-
-  dbReady();
+  }  dbReady();
 }
 
 function dbReady() {
   document.getElementById("statText").textContent = "\u{1F4C5} " + selectedDate;
 }
 
-// ÈÏÖ¤Íê³ÉºóÖ´ÐÐÔÆ¶ËÍ¬²½
+// ï¿½ï¿½Ö¤ï¿½ï¿½Éºï¿½Ö´ï¿½ï¿½ï¿½Æ¶ï¿½Í¬ï¿½ï¿½
 window.__onAuthReady = async function(user) {
   if (user) {
+    // \u5148\u4E0A\u4F20\u672C\u5730\u6570\u636E\u5230\u4E91\u7AEF
+    const allLocal = await DB.getAllEntries();
+    for (const entry of allLocal) {
+      try { await DB.syncToCloud(entry); } catch(e) {}
+    }
+    // \u518D\u4ECE\u4E91\u7AEF\u62C9\u53D6
     const count = await DB.syncFromCloud();
     renderCalendar(curYear, curMonth);
     if (selectedDate) loadEntry(selectedDate);
-    if (count > 0) showToast('\u2601\uFE0F \u4ECE\u4E91\u7AEF\u540C\u6B65\u4E86 ' + count + ' \u6761\u65E5\u8BB0');
+    if (count > 0) showToast('\u2601\uFE0F \u540C\u6B65\u5B8C\u6210\uFF0C\u66F4\u65B0 ' + count + ' \u6761\u65E5\u8BB0');
   }
 };
 
-// Æô¶¯
+// ï¿½ï¿½ï¿½ï¿½
 window.addEventListener("load", init);
 })();
 
