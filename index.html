@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -6,43 +6,43 @@
 <meta name="theme-color" content="#d68d45">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<title>�ǡ��ռ�</title>
+<title>记·日记</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- ====== ��¼/ע����� ====== -->
+<!-- ====== 登录/注册界面 ====== -->
 <div class="auth-screen" id="authScreen">
   <div class="auth-card">
     <div class="auth-logo">&#x2302;</div>
-    <h1 class="auth-title" id="authTitle">��¼</h1>
-    <p class="auth-desc">��¼���ռ��Զ�ͬ�����ƶ�</p>
+    <h1 class="auth-title" id="authTitle">登录</h1>
+    <p class="auth-desc">登录后日记自动同步到云端</p>
     <div class="auth-form">
       <div class="auth-field">
-        <input type="email" id="authEmail" placeholder="�����ַ" autocomplete="email">
+        <input type="email" id="authEmail" placeholder="邮箱地址" autocomplete="email">
       </div>
       <div class="auth-field">
-        <input type="password" id="authPassword" placeholder="���루����6λ��" autocomplete="current-password">
+        <input type="password" id="authPassword" placeholder="密码（至少6位）" autocomplete="current-password">
       </div>
       <div class="auth-error" id="authError"></div>
-      <button class="auth-btn" id="authBtn">�� ¼</button>
+      <button class="auth-btn" id="authBtn">登 录</button>
       <div class="auth-toggle" id="authToggle">
-        û���˺ţ�<a href="#">ע��һ��</a>
+        没有账号？<a href="#">注册一个</a>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ====== ��Ӧ�� ====== -->
+<!-- ====== 主应用 ====== -->
 <div class="app" id="appMain" style="display:none;">
 <div class="left-panel">
 <div class="header desktop-header">
-<h1>&#x2302; �ռ�</h1>
+<h1>&#x2302; 日记</h1>
 <div class="header-actions">
-<button class="icon-btn" id="syncBtn" title="ͬ�����ƶ�">&#x2601;&#xFE0F;</button>
-<button class="icon-btn" id="statsBtn" title="ͳ��">&#x1F4CA;</button>
-<button class="icon-btn" id="exportBtn" title="����">&#x2B06;</button>
-<button class="icon-btn" id="logoutBtn" title="�˳���¼">&#x1F6AA;</button>
+<button class="icon-btn" id="syncBtn" title="同步到云端">&#x2601;&#xFE0F;</button>
+<button class="icon-btn" id="statsBtn" title="统计">&#x1F4CA;</button>
+<button class="icon-btn" id="exportBtn" title="导出">&#x2B06;</button>
+<button class="icon-btn" id="logoutBtn" title="退出登录">&#x1F6AA;</button>
 </div>
 </div>
 <div class="month-nav">
@@ -52,13 +52,12 @@
 <button id="nextMonth">&#x203A;</button>
 </div>
 </div>
-<div class="weekdays"><span>һ</span><span>��</span><span>��</span><span>��</span><span>��</span><span>��</span><span>��</span></div>
+<div class="weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
 <div class="calendar-wrap"><div class="calendar-grid" id="calendarGrid"></div></div>
-<div class="mobile-toolbar"><button class="mobile-btn" id="syncBtnMobile">&#x2601;&#xFE0F;</button><button class="mobile-btn" id="statsBtnMobile">&#x1F4CA;</button><button class="mobile-btn" id="exportBtnMobile">&#x2B06;</button><button class="mobile-btn" id="logoutBtnMobile">&#x1F6AA;</button></div>
 <div class="mobile-toolbar"><button class="mobile-btn" id="syncBtnMobile">☁️</button><button class="mobile-btn" id="statsBtnMobile">📊</button><button class="mobile-btn" id="exportBtnMobile">⬆️</button><button class="mobile-btn" id="logoutBtnMobile">🚪</button></div>
 <div class="today-bar">
-<span class="tl">����</span>
-<span class="stat" id="statText">������ڲ鿴</span>
+<span class="tl">今日</span>
+<span class="stat" id="statText">点击日期查看</span>
 </div>
 </div>
 <div class="right-panel" id="rightPanel">
@@ -68,13 +67,13 @@
 <div class="date-sub" id="entrySub"></div>
 </div>
 <div class="entry-actions">
-<button class="btn-back" id="backBtn">&#x2190; ����</button>
-<button class="btn-edit" id="editBtn">&#x270E; �༭</button></div>
+<button class="btn-back" id="backBtn">&#x2190; 返回</button>
+<button class="btn-edit" id="editBtn">&#x270E; 编辑</button></div>
 </div>
 <div class="entry-body" id="entryBody">
 <div class="empty-state" id="emptyState">
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-<p id="emptyHint">��������ϵ�����<br>�鿴���¼��һ��</p>
+<p id="emptyHint">点击日历上的日期<br>查看或记录这一天</p>
 </div>
 <div id="entryContent" style="display:none;">
 <div class="mood-section"><button class="mood-tag" id="moodDisplay"></button></div>
@@ -90,47 +89,47 @@
 <div class="modal-overlay" id="editModal" style="display:none;">
 <div class="modal-content">
 <div class="modal-header">
-<h2 id="modalTitle">&#x270E; �༭�ռ�</h2>
-<button class="modal-save" id="saveBtn">&#x2713; ����</button>
+<h2 id="modalTitle">&#x270E; 编辑日记</h2>
+<button class="modal-save" id="saveBtn">&#x2713; 保存</button>
 </div>
 <div class="modal-body">
 <div class="mood-section">
-<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F31F; ����</div>
+<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F31F; 心情</div>
 <div class="mood-picker" id="moodPicker">
-<button data-mood="&#x1F60A;">&#x1F60A; ����</button>
-<button data-mood="&#x1F60C;">&#x1F60C; ƽ��</button>
-<button data-mood="&#x1F642;">&#x1F642; ����</button>
-<button data-mood="&#x1F614;">&#x1F614; ����</button>
-<button data-mood="&#x1F620;">&#x1F620; ����</button>
-<button data-mood="&#x1F4AA;">&#x1F4AA; Ԫ��</button>
-<button data-mood="&#x1F929;">&#x1F929; �ж�</button>
+<button data-mood="&#x1F60A;">&#x1F60A; 愉悦</button>
+<button data-mood="&#x1F60C;">&#x1F60C; 平静</button>
+<button data-mood="&#x1F642;">&#x1F642; 还行</button>
+<button data-mood="&#x1F614;">&#x1F614; 低落</button>
+<button data-mood="&#x1F620;">&#x1F620; 烦躁</button>
+<button data-mood="&#x1F4AA;">&#x1F4AA; 元气</button>
+<button data-mood="&#x1F929;">&#x1F929; 感动</button>
 </div>
 </div>
 <div class="location-section">
-<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F4CD; λ��</div>
+<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F4CD; 位置</div>
 <div class="location-input">
-<input type="text" id="locationInput" placeholder="����ص���Զ���λ...">
+<input type="text" id="locationInput" placeholder="输入地点或自动定位...">
 <button class="loc-btn" id="geoBtn">&#x1F4CD;</button>
 </div>
 </div>
 <div class="photo-section">
-<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F4F7; ��Ƭ</div>
+<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x1F4F7; 照片</div>
 <div class="photo-strip" id="photoGrid" style="padding:0;"></div>
 <input type="file" id="photoInput" accept="image/*" multiple style="display:none;">
 </div>
 <div class="diary-section">
-<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x270D; �ռ�</div>
-<textarea class="diary-textarea" id="diaryInput" placeholder="���췢����ʲô����дʲô������..."></textarea>
+<div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">&#x270D; 日记</div>
+<textarea class="diary-textarea" id="diaryInput" placeholder="今天发生了什么？想写什么都可以..."></textarea>
 </div>
 <div class="shopping-section">
 <div class="shop-header">
-<span class="shop-title">&#x1F6D2; �����嵥</span>
-<button class="shop-add" id="shopAddBtn">+ ���</button>
+<span class="shop-title">&#x1F6D2; 购物清单</span>
+<button class="shop-add" id="shopAddBtn">+ 添加</button>
 </div>
 <div class="shop-list" id="shopList"></div>
 <div class="shop-input-row" id="shopInputRow" style="display:none;">
-<input type="text" id="shopInput" placeholder="������Ʒ...">
-<button id="shopConfirm">���</button>
+<input type="text" id="shopInput" placeholder="输入商品...">
+<button id="shopConfirm">添加</button>
 </div>
 </div>
 </div>
@@ -142,4 +141,3 @@
 <script src="js/app.js"></script>
 </body>
 </html>
-
