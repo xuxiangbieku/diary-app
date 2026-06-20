@@ -160,6 +160,8 @@ const DB = (() => {
     entry.updated_at = new Date().toISOString();
     await saveEntry(entry);
     const ok = await syncToCloud(entry);
+    // \u540C\u6B65\u5B8C\u6210\u540E\u4E5F\u62C9\u53D6\u4E91\u7AEF\u6700\u65B0\u6570\u636E
+    syncFromCloud().catch(() => {});
     return ok;
   }
 

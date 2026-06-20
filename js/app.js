@@ -237,7 +237,7 @@ async function saveEntry() {
     closeEdit();
     selectDay(editingDate);
     renderCalendar(curYear, curMonth);
-    showToast(cloudSyncOk ? '\u2714\uFE0F \u5DF2\u4FDD\u5B58\u5E76\u540C\u6B65\u4E91\u7AEF' : '\u2714\uFE0F \u5DF2\u4FDD\u5B58\u672C\u5730\uFF0C\u4E91\u540C\u6B65\u5931\u8D25');
+    showToast(cloudSyncOk ? '\u2714\uFE0F \u5DF2\u4FDD\u5B58\u5E76\u540C\u6B65' : '\u2714\uFE0F \u5DF2\u4FDD\u5B58\u672C\u5730');\n      // \u81EA\u52A8\u4ECE\u4E91\u7AEF\u62C9\u53D6\u5176\u4ED6\u8BBE\u5907\u7684\u6570\u636E\n      DB.syncFromCloud().then(cnt => { if (cnt > 0) { renderCalendar(curYear, curMonth); if (selectedDate) loadEntry(selectedDate); } });
 }
 
 function showToast(msg) {
@@ -251,6 +251,21 @@ function showToast(msg) {
 }
 
 // ---- ��ʼ����APP + ��֤�� ----
+// \u81EA\u52A8\u540C\u6B65\uFF1A\u6BCF\u5206\u949F\u68C0\u67E5\u4E00\u6B21
+let autoSyncTimer = null;
+function startAutoSync() {
+  if (autoSyncTimer) clearInterval(autoSyncTimer);
+  autoSyncTimer = setInterval(async () => {
+    const user = window.__auth ? window.__auth.getUser() : null;
+    if (!user) return;
+    const count = await DB.syncFromCloud();
+    if (count > 0) {
+      renderCalendar(curYear, curMonth);
+      if (selectedDate) loadEntry(selectedDate);
+    }
+  }, 60000);
+}
+
 function init() {
   const now = new Date();
   renderCalendar(now.getFullYear(), now.getMonth());
@@ -393,7 +408,7 @@ window.__onAuthReady = async function(user) {
     const allLocal = await DB.getAllEntries();
     for (const entry of allLocal) {
       try { await DB.syncToCloud(entry); } catch(e) {}
-    }
+      startAutoSync();\n  }
     // \u518D\u4ECE\u4E91\u7AEF\u62C9\u53D6
     const count = await DB.syncFromCloud();
     renderCalendar(curYear, curMonth);
