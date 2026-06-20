@@ -116,13 +116,27 @@ const DB = (() => {
           uploadedPhotos.push(p);
         }
       }
-      await sbApi("POST", "/rest/v1/diary_entries", {
-        user_id: userId, date: entry.date,
-        mood: entry.mood || "", location: entry.location || "",
-        text: entry.text || "", photos: uploadedPhotos,
-        shopping: entry.shopping || [],
-        updated_at: entry.updated_at || new Date().toISOString()
-      }, { "Prefer": "resolution=merge-duplicates" });
+      try {
+        await sbApi("POST", "/rest/v1/diary_entries", {
+          user_id: userId, date: entry.date,
+          mood: entry.mood || "", location: entry.location || "",
+          text: entry.text || "", photos: uploadedPhotos,
+          shopping: entry.shopping || [],
+          updated_at: entry.updated_at || new Date().toISOString()
+        }, { "Prefer": "resolution=merge-duplicates" });
+      } catch (e) {
+        // 如果 POST 重复（409），用 PATCH 更新已有记录
+        if (e.message && e.message.includes("23505")) {
+          await sbApi("PATCH", "/rest/v1/diary_entries?user_id=eq." + userId + "&date=eq." + entry.date, {
+            mood: entry.mood || "", location: entry.location || "",
+            text: entry.text || "", photos: uploadedPhotos,
+            shopping: entry.shopping || [],
+            updated_at: entry.updated_at || new Date().toISOString()
+          });
+        } else {
+          throw e;
+        }
+      }
       lastSyncTime = new Date();
       return true;
     } catch (e) {
