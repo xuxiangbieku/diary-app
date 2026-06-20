@@ -233,10 +233,11 @@ async function saveEntry() {
     photos: state.photos,
     shopping: state.shopping
   };
-  await DB.saveAndSync(entry); // ���� + �ƶ�
-  closeEdit();
-  selectDay(editingDate);
-  renderCalendar(curYear, curMonth);
+    await DB.saveAndSync(entry);
+    closeEdit();
+    selectDay(editingDate);
+    renderCalendar(curYear, curMonth);
+    showToast('\u2714\uFE0F \u5DF2\u4FDD\u5B58');
 }
 
 function showToast(msg) {
@@ -368,7 +369,7 @@ function init() {
       const allEntries = await DB.getAllEntries();
       let pushCount = 0;
       for (const entry of allEntries) {
-        try { await DB.syncToCloud(entry); pushCount++; } catch(e) {}
+        if (await DB.syncToCloud(entry)) pushCount++;
       }
       // 2. 再从云端拉取最新数据到本地
       const count = await DB.syncFromCloud();

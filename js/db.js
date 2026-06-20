@@ -99,7 +99,7 @@ const DB = (() => {
   async function syncToCloud(entry) {
     const userId = getUserId();
     const token = getToken();
-    if (!userId || !token) return;
+    if (!userId || !token) return false;
     try {
       let photos = entry.photos || [];
       const uploadedPhotos = [];
@@ -121,7 +121,11 @@ const DB = (() => {
         updated_at: new Date().toISOString()
       }, { "Prefer": "resolution=merge-duplicates" });
       lastSyncTime = new Date();
-    } catch (e) { console.warn("云同步错误:", e); }
+      return true;
+    } catch (e) {
+      console.error("\u4E91\u540C\u6B65\u9519\u8BEF:", e && e.message ? e.message : e);
+      return false;
+    }
   }
 
   // ---- 从云端拉取 ----
@@ -155,8 +159,8 @@ const DB = (() => {
   async function saveAndSync(entry) {
     entry.updated_at = new Date().toISOString();
     await saveEntry(entry);
-    syncToCloud(entry).catch(() => {});
-    return true;
+    const ok = await syncToCloud(entry);
+    return ok;
   }
 
   // ---- 本地 IndexedDB ----
