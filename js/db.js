@@ -64,8 +64,8 @@ const DB = (() => {
       "Content-Type": "application/json",
       ...extraHeaders,
     };
-    const token = getToken();
-    if (token) headers["Authorization"] = "Bearer " + token;
+    // No JWT needed - RLS is disabled
+    // Using anon key only
 
     const opts = { method, headers };
     if (body) opts.body = JSON.stringify(body);
@@ -85,11 +85,9 @@ const DB = (() => {
   async function uploadPhoto(blob) {
     const userId = getUserId();
     if (!userId) return null;
-    const token = getToken();
     const fileName = userId + "/" + Date.now() + "_" + Math.random().toString(36).slice(2,8) + ".jpg";
     try {
       const headers = { "apikey": SUPABASE_CONFIG.anonKey };
-      if (token) headers["Authorization"] = "Bearer " + token;
       const resp = await fetch(SUPABASE_CONFIG.url + "/storage/v1/object/diary-photos/" + fileName, {
         method: "POST", headers, body: blob
       });
