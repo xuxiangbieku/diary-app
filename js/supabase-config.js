@@ -1,9 +1,6 @@
 // Supabase 配置
 const SUPABASE_CONFIG = {
   url: 'https://rfbwihrvweajivqdcwyn.supabase.co',
-  // anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmYndpaHJ2d2Vhaml2cWRjd3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0ODExMTcsImV4cCI6MjA5NzA1NzExN30.-iqZcGUQ8s5mkI2ZOy2dZG5pgxbYjOVcrs_WZsuVr10'
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmYndpaHJ2d2Vhaml2cWRjd3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0ODExMTcsImV4cCI6MjA5NzA1NzExN30.-iqZcGUQ8s5mkI2ZOy2dZG5pgxbYjOVcrs_WZsuVr10'
 };
 
-
-// 使用 service_role key 绕过 RLS
-SUPABASE_CONFIG.anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmYndpaHJ2d2Vhaml2cWRjd3luIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTQ4MTExNywiZXhwIjoyMDk3MDU3MTE3fQ.5d0k1GTkoIWFaxfkvyMeSd1NBb6iw4J4KmAXzV8EQWo';
