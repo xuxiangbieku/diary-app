@@ -160,7 +160,7 @@ const DB = (() => {
           await saveEntry({
             date: row.date, mood: row.mood || "", location: row.location || "",
             text: row.text || "", photos: row.photos || [],
-            shopping: row.shopping || [], updated_at: row.updated_at
+            shopping: row.shopping || [], weight: row.weight || null, targetWeight: row.target_weight || null, updated_at: row.updated_at
           });
           count++;
         }

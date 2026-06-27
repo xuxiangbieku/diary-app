@@ -188,3 +188,44 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font
 }
 .mobile-btn:hover { background: var(--hover); }
 .mobile-btn:active { background: var(--border); transform: scale(0.95); }
+
+
+/* 体重 */
+.weight-section {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  margin: 0 0 5px 0;
+}
+.weight-display {
+  font-size: 15px;
+  color: var(--text);
+  background: var(--card-bg);
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
+.weight-input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.weight-input-row input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  font-size: 14px;
+  color: var(--text);
+  min-width: 0;
+}
+.weight-unit {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-right: 10px;
+}
+.weight-input-row input:focus {
+  outline: none;
+  border-color: var(--primary);
+}

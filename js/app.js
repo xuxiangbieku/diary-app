@@ -6,7 +6,7 @@ let curYear, curMonth;
 let selectedDate = null;
 let currentEntry = null;
 let editingDate = null;
-let state = { mood: "", location: "", text: "", photos: [], shopping: [] };
+let state = { mood: "", location: "", text: "", photos: [], shopping: [], weight: "", targetWeight: "" };
 
 function fmt(d) {
   const y = d.getFullYear(), m = d.getMonth()+1, dd = d.getDate();
@@ -122,6 +122,14 @@ async function loadEntry(dateStr) {
   mood.textContent = moodVal ? moodVal + " " + ({"\u{1F60A}":"\u6109\u60A6","\u{1F60C}":"\u5E73\u9759","\u{1F642}":"\u8FD8\u884C","\u{1F614}":"\u4F4E\u843D","\u{1F620}":"\u70E6\u8E81","\u{1F4AA}":"\u5143\u6C14","\u{1F929}":"\u611F\u52A8"}[moodVal] || "") : "\u8BB0\u5F55\u5FC3\u60C5";
   const loc = document.getElementById("locationDisplay");
   loc.textContent = currentEntry.location ? "\u{1F4CD} " + currentEntry.location : "\u8BB0\u5F55\u4F4D\u7F6E";
+  const wt = document.getElementById("weightDisplay");
+  if (currentEntry.weight) {
+    const diff = currentEntry.targetWeight ? (currentEntry.weight - currentEntry.targetWeight).toFixed(1) : null;
+    wt.textContent = "\u2696 " + currentEntry.weight + "kg" + (diff !== null ? (diff > 0 ? " \u2191+" + diff : " \u2193" + Math.abs(diff)) : "");
+    if (currentEntry.targetWeight) wt.textContent += " \u2668 " + currentEntry.targetWeight + "kg";
+  } else {
+    wt.textContent = "\u2696 \u8BB0\u5F55\u4F53\u91CD";
+  }
   const di = document.getElementById("diaryDisplay");
   di.textContent = currentEntry.text || "";
   renderPhotos(currentEntry.photos || [], "photoDisplay", false);
@@ -211,12 +219,16 @@ function openEdit(dateStr) {
     location: entry.location || "",
     text: entry.text || "",
     photos: entry.photos ? [...entry.photos] : [],
-    shopping: entry.shopping ? entry.shopping.map(s => ({...s})) : []
+    shopping: entry.shopping ? entry.shopping.map(s => ({...s})) : [],
+    weight: entry.weight || "",
+    targetWeight: entry.targetWeight || ""
   };
   document.querySelectorAll("#moodPicker button").forEach(b => {
     b.classList.toggle("active", b.dataset.mood === state.mood);
   });
   document.getElementById("locationInput").value = state.location || "";
+  document.getElementById("weightInput").value = state.weight || "";
+  document.getElementById("targetWeightInput").value = state.targetWeight || "";
   document.getElementById("diaryInput").value = state.text || "";
   renderPhotos(state.photos, "photoGrid", true);
   renderShopping(state.shopping, "shopList", true);
@@ -239,7 +251,9 @@ async function saveEntry() {
     location: state.location,
     text: state.text,
     photos: state.photos,
-    shopping: state.shopping
+    shopping: state.shopping,
+    weight: state.weight ? parseFloat(state.weight) : null,
+    targetWeight: state.targetWeight ? parseFloat(state.targetWeight) : null
   };
     const cloudSyncOk = await DB.saveAndSync(entry);
     closeEdit();
@@ -308,6 +322,8 @@ function init() {
     b.onclick = () => { document.querySelectorAll("#moodPicker button").forEach(bb => bb.classList.remove("active")); b.classList.add("active"); };
   });
 
+  document.getElementById("weightInput").oninput = (e) => { state.weight = e.target.value; };
+  document.getElementById("targetWeightInput").oninput = (e) => { state.targetWeight = e.target.value; };
   document.getElementById("geoBtn").onclick = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(pos => {
