@@ -8,6 +8,16 @@ let currentEntry = null;
 let editingDate = null;
 let state = { mood: "", location: "", text: "", photos: [], shopping: [], weight: "", targetWeight: "" };
 
+// 全局目标体重
+function getGlobalTarget() {
+  try { return localStorage.getItem("diary_target") || ""; } catch(e) { return ""; }
+}
+function saveGlobalTarget(v) {
+  try { localStorage.setItem("diary_target", v); } catch(e) {}
+}
+// 默认70kg
+if (!getGlobalTarget()) saveGlobalTarget("70");
+
 function fmt(d) {
   const y = d.getFullYear(), m = d.getMonth()+1, dd = d.getDate();
   return y + "-" + (m<10?"0":"") + m + "-" + (dd<10?"0":"") + dd;
@@ -228,7 +238,8 @@ function openEdit(dateStr) {
   });
   document.getElementById("locationInput").value = state.location || "";
   document.getElementById("weightInput").value = state.weight || "";
-  document.getElementById("targetWeightInput").value = state.targetWeight || "";
+    if (!state.targetWeight) state.targetWeight = getGlobalTarget();
+  document.getElementById("targetWeightInput").value = state.targetWeight;
   document.getElementById("diaryInput").value = state.text || "";
   renderPhotos(state.photos, "photoGrid", true);
   renderShopping(state.shopping, "shopList", true);
@@ -255,6 +266,7 @@ async function saveEntry() {
     weight: state.weight ? parseFloat(state.weight) : null,
     targetWeight: state.targetWeight ? parseFloat(state.targetWeight) : null
   };
+  if (state.targetWeight) saveGlobalTarget(state.targetWeight);
     const cloudSyncOk = await DB.saveAndSync(entry);
     closeEdit();
     selectDay(editingDate);
