@@ -234,7 +234,7 @@ async function saveEntry() {
     if (b.classList.contains("active")) state.mood = b.dataset.mood;
   });
   const entry = {
-    date: editingDate,
+    date: selectedDate,
     mood: state.mood,
     location: state.location,
     text: state.text,
