@@ -4,6 +4,7 @@ const DB = (() => {
   const DB_NAME = "DiaryDB", DB_VER = 1, STORE = "entries";
   let db = null;
   let lastSyncTime = null;
+  let lastSyncError = null;
 
   function open() {
     return new Promise((resolve, reject) => {
@@ -58,19 +59,32 @@ const DB = (() => {
   }
 
   // ---- REST API 通用请求（支持额外请求头）----
-  async function sbApi(method, path, body, extraHeaders) {
+  async function sbApi(method, path, body, extraHeaders, _retried) {
     const headers = {
       "apikey": SUPABASE_CONFIG.anonKey,
       "Content-Type": "application/json",
       ...extraHeaders,
     };
-    // No JWT needed - RLS is disabled
-    // Using anon key only
+    // 带上 JWT：兼容 RLS 启用（auth.uid() = user_id）的情况；RLS 关闭时 JWT 也无副作用
+    const token = getToken();
+    if (token) headers["Authorization"] = "Bearer " + token;
 
     const opts = { method, headers };
     if (body) opts.body = JSON.stringify(body);
 
-    const resp = await fetch(SUPABASE_CONFIG.url + path, opts);
+    let resp;
+    try {
+      resp = await fetch(SUPABASE_CONFIG.url + path, opts);
+    } catch (e) {
+      throw new Error("无法连接云端服务器（" + e.message + "）");
+    }
+    // token 过期（401）→ 尝试刷新会话后重试一次
+    if (resp.status === 401 && !_retried && window.__auth && window.__auth.refreshSession) {
+      try {
+        const ok = await window.__auth.refreshSession();
+        if (ok) return sbApi(method, path, body, extraHeaders, true);
+      } catch (e) { /* 刷新失败继续走下面 */ }
+    }
     if (!resp.ok) {
       const text = await resp.text();
       throw new Error(text || resp.statusText);
@@ -87,7 +101,9 @@ const DB = (() => {
     if (!userId) return null;
     const fileName = userId + "/" + Date.now() + "_" + Math.random().toString(36).slice(2,8) + ".jpg";
     try {
+      const token = getToken();
       const headers = { "apikey": SUPABASE_CONFIG.anonKey };
+      if (token) headers["Authorization"] = "Bearer " + token;
       const resp = await fetch(SUPABASE_CONFIG.url + "/storage/v1/object/diary-photos/" + fileName, {
         method: "POST", headers, body: blob
       });
@@ -136,9 +152,11 @@ const DB = (() => {
         }
       }
       lastSyncTime = new Date();
+      lastSyncError = null;
       return true;
     } catch (e) {
-      console.error("\u2601\uFE0F \u4E91\u540C\u6B65\u8BE6\u7EC6\u9519\u8BEF:", e && e.message ? e.message : e);
+      lastSyncError = (e && e.message) ? e.message : String(e);
+      console.error("\u2601\uFE0F \u4E91\u540C\u6B65\u8BE6\u7EC6\u9519\u8BEF:", lastSyncError);
       return false;
     }
   }
@@ -166,8 +184,13 @@ const DB = (() => {
         }
       }
       lastSyncTime = new Date();
+      lastSyncError = null;
       return count;
-    } catch (e) { console.warn("云拉取失败:", e); return 0; }
+    } catch (e) {
+      lastSyncError = (e && e.message) ? e.message : String(e);
+      console.warn("云拉取失败:", lastSyncError);
+      return 0;
+    }
   }
 
   // ---- 本地 + 云端同步保存 ----
@@ -218,6 +241,7 @@ const DB = (() => {
   return {
     getEntry, getAllEntries, saveEntry, saveAndSync, deleteEntry,
     exportAll, importAll, syncToCloud, syncFromCloud,
-    getLastSync: () => lastSyncTime
+    getLastSync: () => lastSyncTime,
+    getLastSyncError: () => lastSyncError
   };
 })();

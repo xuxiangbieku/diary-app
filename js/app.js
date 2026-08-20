@@ -428,7 +428,12 @@ function init() {
       const count = await DB.syncFromCloud();
       renderCalendar(curYear, curMonth);
       if (selectedDate) loadEntry(selectedDate);
-      showToast('☁️ 同步完成，上传' + pushCount + '条，更新' + count + '条');
+      const syncErr = DB.getLastSyncError();
+      if (syncErr) {
+        showToast('☁️ 同步失败：' + syncErr);
+      } else {
+        showToast('☁️ 同步完成，上传' + pushCount + '条，更新' + count + '条');
+      }
       syncBtn.disabled = false;
       syncBtn.textContent = '☁️ 同步';
     };

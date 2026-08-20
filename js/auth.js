@@ -36,6 +36,44 @@ function init() {
     else localStorage.removeItem("sb-session");
   }
 
+  // 验证当前 access_token 是否有效，失效则用 refresh_token 自动续期
+  // 返回 true 表示会话有效（或已续期）；离线/网络错误时返回 false 但保留本地会话
+  async function refreshSession() {
+    let sess;
+    try {
+      const s = localStorage.getItem("sb-session");
+      if (!s) return false;
+      sess = JSON.parse(s);
+    } catch(e) { return false; }
+
+    // 1. 当前 token 有效 → 无需刷新
+    try {
+      const resp = await fetch(SUPABASE_URL + "/auth/v1/user", {
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": "Bearer " + (sess.access_token || "")
+        }
+      });
+      if (resp.ok) return true;
+    } catch(e) { return false; } // 网络错误（如无法连接）→ 保持离线可用
+
+    // 2. token 失效 → 用 refresh_token 续期
+    if (!sess.refresh_token) return false;
+    try {
+      const resp = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=refresh_token", {
+        method: "POST",
+        headers: { "apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: sess.refresh_token })
+      });
+      const data = await resp.json();
+      if (resp.ok && data.access_token) {
+        saveSession(data);
+        return true;
+      }
+      return false;
+    } catch(e) { return false; }
+  }
+
   async function sbFetch(path, options) {
     const headers = {
       "apikey": SUPABASE_ANON_KEY,
@@ -97,7 +135,12 @@ function init() {
 
   function setupAuth() {
     // 先检查本地会话
-    if (loadSession()) { showApp(); return; }
+    if (loadSession()) {
+      showApp();
+      // 后台验证/续期 token（离线或网络异常时静默保持本地会话，可正常读本地日记）
+      refreshSession().catch(() => {});
+      return;
+    }
 
     const authBtn = $id("authBtn");
     if (!authBtn) return;
@@ -152,6 +195,7 @@ function init() {
   // 导出
   window.__auth = {
     getUser: () => currentUser,
+    refreshSession,
   };
   window.__logout = signOut;
 
